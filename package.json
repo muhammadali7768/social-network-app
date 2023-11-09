@@ -1,0 +1,21 @@
+{
+ "name": "social-network-app",
+  "version": "1.0.0",
+  "description": "This is a social network app using kafka",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "kafka",
+    "nodejs"
+  ],
+  "author": "muhammadali.hisar@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "kafkajs": "^2.2.4",
+    "socket.io": "^4.7.2"
+  }
+}
