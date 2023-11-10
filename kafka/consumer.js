@@ -15,7 +15,7 @@ async function subscribeToRoom(room) {
     eachMessage: async ({ topic, partition, message }) => {
       // Process incoming chat messages
       const chatMessage = JSON.parse(message.value);
-      // Handle the message and update the UI
+      io.to(topic).emit('message', chatMessage);
     },
   });
 }
