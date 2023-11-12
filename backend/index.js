@@ -32,7 +32,7 @@ app.post("/send/:room", async (req, res) => {
 io.on("connection", (socket) => {
 
   socket.on("subscribe", async(topic) => {
-    console.log("on subscribe", topic)
+    console.log("user subscribe socketio", topic)
     socket.join(topic)
    // await connectConsumer();
     await subscribeToRoom(topic);
