@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "This is a social network app using kafka",
   "main": "index.js",
+  "type": "module",
   "devDependencies": {},
   "scripts": {
     "dev": "node index.js"

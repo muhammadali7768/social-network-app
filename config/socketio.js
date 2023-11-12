@@ -1,19 +1,22 @@
-const socketIO = require('socket.io');
+import { Server } from 'socket.io';
 
 let io;
-function initializeSocket(server) {
-   io = socketIO(server, {
+const initializeSocket=async(server) =>{
+    console.log("socketio initializing...")
+   io = new Server(server, {
     cors: {
       origin: 'http://localhost:3001',
       methods: ['GET', 'POST'],
-      // allowedHeaders: ['my-custom-header'],
       credentials: true,
     }
   });
-
-  // Define any specific event handlers or configuration related to Socket.IO here
-
-  return io;
+//   return io;
 }
+function getIO(fileName) {
+    if (!io) {
+      console.log('Socket.io has not been initialized yet', fileName);      
+    }
+    return io;
+  } 
 
-module.exports = { initializeSocket, getIO: () => io };
+export { initializeSocket, getIO};

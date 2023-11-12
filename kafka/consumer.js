@@ -1,10 +1,8 @@
-const { kafka } = require('./client');
-const { getIO } = require('../config/socketio');
+import { kafka } from './client.js';
+import { getIO } from '../config/socketio.js';
 
 let consumer;
 let subscribedRoom;
-
-const io = getIO();
 
 // Function to establish the connection to the Kafka cluster
 async function connectConsumer() {
@@ -18,15 +16,15 @@ async function subscribeToRoom(room) {
   if (subscribedRoom === room) {
     console.log(`Already subscribed to room: ${room}`);
     // Send all the old messages
+    await consumer.seek({ topic: room, partition: 0, offset: 7 });
+    const io = getIO();
     await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
-        // Process incoming chat messages
-        const chatMessage = JSON.parse(message.value);
-        console.log('Message', chatMessage);
-       // io.to(topic).emit('message', chatMessage);
-       io.emit('message', chatMessage)
+        // Emit each received message to the Socket.IO client
+        io.emit('message', message.value.toString());
       },
     });
+
     return; // Return if already subscribed to the same room
   }
 
@@ -38,7 +36,7 @@ async function subscribeToRoom(room) {
     await consumer.subscribe({ topic: room, fromBeginning: true });
     subscribedRoom = room;
     console.log(`Subscribed to room: ${room}`);
-
+    const io = getIO();
     await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
         // Process incoming chat messages
@@ -59,4 +57,4 @@ async function stopConsumer() {
   }
 }
 
-module.exports = { connectConsumer, subscribeToRoom, stopConsumer };
+export { connectConsumer, subscribeToRoom, stopConsumer };

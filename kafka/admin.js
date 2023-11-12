@@ -1,4 +1,4 @@
-const {kafka}=require('./client')
+import {kafka} from './client.js'
 
 const admin = kafka.admin();
 
@@ -26,4 +26,4 @@ async function createTopics(topic) {
     await admin.disconnect();
 }
 
-module.exports={createTopics}
+export {createTopics}

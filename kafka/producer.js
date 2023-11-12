@@ -1,4 +1,4 @@
-const {kafka}= require('./client') 
+import {kafka} from './client.js' 
 
 const producer = kafka.producer();
 // When we call this function it will establish a connection to the Kafka cluster
@@ -13,9 +13,8 @@ async function sendMessage(room, message) {
   await producer.send({
     topic: room,
     messages: [
-      { value: JSON.stringify({ text: message, sender: 'user123' }) },
+      { value: JSON.stringify({ text: message, sender: 'user123' }),timestamp: Date.now() },
     ],
   });
 }
-
-module.exports = { connectProducer, sendMessage };
+export { connectProducer, sendMessage };

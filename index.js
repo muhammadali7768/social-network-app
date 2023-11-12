@@ -1,16 +1,20 @@
-const express = require("express");
-const cors = require('cors');
+import express from "express";
+import cors from 'cors';
 const app = express();
-const http = require('http').createServer(app);
- const {initializeSocket} =require('./config/socketio')
+import {createServer} from 'node:http'
+const http= createServer(app);
+import {initializeSocket,getIO} from './config/socketio.js'
+await initializeSocket(http);
 
- const io = initializeSocket(http);
+import { connectProducer, sendMessage } from "./kafka/producer.js";
+import { connectConsumer, subscribeToRoom,stopConsumer } from "./kafka/consumer.js";
+import { createTopics } from "./kafka/admin.js";
+ const io= getIO();
 app.use(express.json());
 app.use(cors({ origin: 'http://localhost:3001' }));
 
-const { connectProducer, sendMessage } = require("./kafka/producer");
-const { connectConsumer, subscribeToRoom,stopConsumer } = require("./kafka/consumer");
-const { createTopics } = require("./kafka/admin");
+await connectProducer(); 
+await connectConsumer()
 // Route for sending chat messages to Kafka
 app.post("/send/:room", async (req, res) => {
   const { room } = req.params;
@@ -26,7 +30,6 @@ app.post("/send/:room", async (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("io connection started")
   socket.on("subscribe", async(room) => {
     console.log("on subscribe", room)
    // await connectConsumer();
@@ -40,8 +43,7 @@ io.on("connection", (socket) => {
 });
 
 http.listen(3000, async () => {
-  await connectProducer(); 
-  await connectConsumer()
+
   //await stopConsumer()
   
  
