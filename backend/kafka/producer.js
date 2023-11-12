@@ -13,7 +13,7 @@ async function sendMessage(room, message) {
   await producer.send({
     topic: room,
     messages: [
-      { value: JSON.stringify({ text: message, sender: 'user123' }),timestamp: Date.now() },
+      { value: JSON.stringify({ message: message, sender: 'user123' }),timestamp: Date.now() },
     ],
   });
 }

@@ -6,26 +6,28 @@ let subscribedRoom;
 
 // Function to establish the connection to the Kafka cluster
 async function connectConsumer() {
-  consumer = kafka.consumer({ groupId: 'chat-consumer' });
+  consumer = kafka.consumer({ groupId: 'chat-consumer', sessionTimeout: 15000 });
   await consumer.connect();
   console.log('Consumer started');
+}
+
+const getMessageHistory=async(topic)=>{
+  await consumer.seek({ topic, partition: 0, offset: 7 });
+  const io = getIO();
+  await consumer.run({
+    eachMessage: async ({ topic, partition, message }) => {
+      // Emit each received message to the Socket.IO client
+      io.to(topic).emit('message', message.value.toString());
+    },
+  });
 }
 
 // Function to subscribe to a specific chat room/topic
 async function subscribeToRoom(room) {
   if (subscribedRoom === room) {
     console.log(`Already subscribed to room: ${room}`);
-    // Send all the old messages
-    await consumer.seek({ topic: room, partition: 0, offset: 7 });
-    const io = getIO();
-    await consumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        // Emit each received message to the Socket.IO client
-        io.emit('message', message.value.toString());
-      },
-    });
-
-    return; // Return if already subscribed to the same room
+    getMessageHistory(room)
+      return; // Return if already subscribed to the same room
   }
 
   if (consumer) {
@@ -43,7 +45,7 @@ async function subscribeToRoom(room) {
         const chatMessage = JSON.parse(message.value);
         console.log('Message', chatMessage);
        // io.to(topic).emit('message', chatMessage);
-       io.emit('message', chatMessage)
+       io.to(topic).emit('message', chatMessage)
       },
     });
   }

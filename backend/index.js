@@ -30,15 +30,18 @@ app.post("/send/:room", async (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  socket.on("subscribe", async(room) => {
-    console.log("on subscribe", room)
+
+  socket.on("subscribe", async(topic) => {
+    console.log("on subscribe", topic)
+    socket.join(topic)
    // await connectConsumer();
-    await subscribeToRoom(room);
+    await subscribeToRoom(topic);
     
   });
 
   socket.on("chatMessage",async (msgObj)=>{
-    await sendMessage(msgObj.room, msgObj.message.text)
+    const {senderId,groupId, message}=msgObj
+    await sendMessage(groupId, message)
   })
 });
 
