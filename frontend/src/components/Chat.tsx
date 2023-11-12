@@ -38,7 +38,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col">
       <div className="border p-4 mb-4">
         {messages.map((msg:Message, index) => (
           <div key={index} className="mb-2">
