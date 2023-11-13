@@ -1,7 +1,7 @@
-import ChatInput from '@/components/ChatInput'
-import ListItem from '@/components/ContactItem'
-import ContactList from '@/components/ContactList'
-import MessageList from '@/components/MessageList'
+import ChatInput from '@/components/chat/ChatInput'
+import ListItem from '@/components/chat/ContactItem'
+import ContactList from '@/components/chat/ContactList'
+import MessageList from '@/components/chat/MessageList'
 
 export default function ChatWindow() {
   return (
