@@ -28,6 +28,10 @@ app.post("/send/:room", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+app.post("/api/users",(req, res)=>{
+  console.log("request is hitting the api point",req.body)
+  return res.send({message: "working"})
+})
 
 io.on("connection", (socket) => {
 
