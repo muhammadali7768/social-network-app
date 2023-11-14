@@ -1,4 +1,4 @@
-import {kafka} from './client.js' 
+import {kafka} from '../config/kafkaClient.js' 
 
 const producer = kafka.producer();
 // When we call this function it will establish a connection to the Kafka cluster

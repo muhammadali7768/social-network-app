@@ -1,4 +1,4 @@
-import {kafka} from './client.js'
+import {kafka} from '../config/kafkaClient.js'
 
 const admin = kafka.admin();
 

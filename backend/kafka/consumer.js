@@ -1,4 +1,4 @@
-import { kafka } from './client.js';
+import { kafka } from '../config/kafkaClient.js';
 import { getIO } from '../config/socketio.js';
 
 let consumer;
