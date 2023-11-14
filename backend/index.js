@@ -1,3 +1,4 @@
+import "dotenv/config.js"
 import express from "express";
 import cors from 'cors';
 const app = express();
@@ -11,8 +12,8 @@ import { connectConsumer, subscribeToRoom,stopConsumer } from "./kafka/consumer.
 import { createTopics } from "./kafka/admin.js";
  const io= getIO();
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3001' }));
-
+app.use(cors({ origin: process.env.ALLOWED_ORIGINS.split(' ') }));
+console.log(process.env.ALLOWED_ORIGINS.split(' '))
 await connectProducer(); 
 await connectConsumer()
 // Route for sending chat messages to Kafka
@@ -49,11 +50,12 @@ io.on("connection", (socket) => {
   })
 });
 
-http.listen(3000, async () => {
+const PORT=process.env.PORT || 3000;
+http.listen(PORT, async () => {
 
   //await stopConsumer()
   
  
 
-  console.log("Server is running on port 3000");
+  console.log(`Server is running on port ${PORT}`);
 });
