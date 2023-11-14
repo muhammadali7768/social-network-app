@@ -21,7 +21,7 @@ const RegisterForm: React.FC = () => {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Form data will be handle here
-    fetch("http://localhost:3000/api/users", {
+    fetch("http://localhost:3000/api/auth/register", {
       method: "POST",
       headers: {
         "Content-type": "application/json",
@@ -37,9 +37,6 @@ const RegisterForm: React.FC = () => {
       });
   };
 
-  const handleLogin = () => {
-    console.log("User clicked the Login button");
-  };
 
   return (
     <form className="max-w-md mx-auto rounded-lg" onSubmit={handleSubmit}>

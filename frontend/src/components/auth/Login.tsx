@@ -17,13 +17,24 @@ const LoginForm: React.FC = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(loginData); // Handle login logic here
+    console.log(loginData);
+
+    fetch("http://localhost:3000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify(loginData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
-  const handleRegister = () => {
-    console.log('User clicked the Register button');
-    // Logic to navigate to the registration page or handle registration
-  };
 
   return (
   
