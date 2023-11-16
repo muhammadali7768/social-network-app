@@ -1,12 +1,11 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { ILoginFormData } from '@/interfaces/auth.interfaces';
 import Button from '../Button';
-interface LoginData {
-  email: string;
-  password: string;
-}
+import { useAuth } from '@/hooks/useAuth';
 
 const LoginForm: React.FC = () => {
-  const [loginData, setLoginData] = useState<LoginData>({
+  const {login}= useAuth()
+  const [loginData, setLoginData] = useState<ILoginFormData>({
     email: '',
     password: '',
   });
@@ -15,24 +14,11 @@ const LoginForm: React.FC = () => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async(e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log(loginData);
-
-    fetch("http://localhost:3000/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(loginData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    await login(loginData);
+  
   };
 
 

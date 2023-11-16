@@ -1,14 +1,9 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import Button from "../Button";
-
-interface FormData {
-  username: string;
-  email: string;
-  password: string;
-}
+import {IRegisterFormData} from '@/interfaces/auth.interfaces'
 
 const RegisterForm: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<IRegisterFormData>({
     username: "",
     email: "",
     password: "",
