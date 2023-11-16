@@ -53,11 +53,15 @@ const login = (req, res) => {
         }
       );
 
+      const refreshToken = jwt.sign({ id: user.id, email: user.email, name: user.username },
+         process.env.REFRESH_TOKEN_SECRET);
+
       res.status(200).send({
         id: user.id,
         username: user.username,
         email: user.email,
         accessToken: token,
+        refreshToken:refreshToken
       });
     })
     .catch((err) => {
