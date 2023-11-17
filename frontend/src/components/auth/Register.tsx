@@ -1,8 +1,9 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import Button from "../Button";
 import {IRegisterFormData} from '@/interfaces/auth.interfaces'
-
+import { useAuth } from '@/hooks/useAuth';
 const RegisterForm: React.FC = () => {
+  const {register}=useAuth();
   const [formData, setFormData] = useState<IRegisterFormData>({
     username: "",
     email: "",
@@ -13,23 +14,9 @@ const RegisterForm: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async(e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Form data will be handle here
-    fetch("http://localhost:3000/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    await register(formData)
   };
 
 

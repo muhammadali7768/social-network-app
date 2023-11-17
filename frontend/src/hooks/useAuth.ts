@@ -41,13 +41,13 @@ export const useAuth = () => {
   const register = async (postData: IRegisterFormData) => {
     try {
       setLoading(true);
-      const { data } = await request.post("signup", postData);
+      const { data } = await request.post("auth/register", postData);
       setLoading(false);
       if (data.id) {
         
         StorageService.setUserData(data);
         setUser(data);
-        push("/auth/verify-email");
+       // push("/auth/verify-email");
       }
     } catch (err: any) {
       setLoading(false);
