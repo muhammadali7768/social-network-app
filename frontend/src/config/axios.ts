@@ -18,7 +18,8 @@ request.interceptors.request.use(
   (requestConfig: any) => {
     const { token } = StorageService.getAuthData();
 
-    if (token && token !== null && token !== '') {
+    if (token && token !== null && token !== '' && token !=="undefined" && token !==undefined) {
+      console.log("token :",token)
       if (!isExpiredToken(token)) {
         requestConfig.headers.Authorization = `Bearer ${token}`;
       } else {
@@ -68,7 +69,7 @@ const resetTokenAndReattemptRequest = async (
       make the request. Update the value to the check so that no
       other call can be made concurrently.*/
       isAlreadyFetchingAccessToken = true;
-      const response = await refreshRequest.post(`/refresh_token`, {
+      const response = await refreshRequest.post(`auth/refresh_token`, {
         token: resetToken,
       });
 

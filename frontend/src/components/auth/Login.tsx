@@ -1,14 +1,34 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { ILoginFormData } from '@/interfaces/auth.interfaces';
 import Button from '../Button';
 import { useAuth } from '@/hooks/useAuth';
-
+import StorageService from "@/services/storage";
+import { useRouter } from "next/router";
+import useUserStore from "@/hooks/useUserStore";
 const LoginForm: React.FC = () => {
-  const {login}= useAuth()
+  const {login, getUser, loading}= useAuth()
+  const {push} = useRouter();
   const [loginData, setLoginData] = useState<ILoginFormData>({
     email: '',
     password: '',
   });
+  const [isGetUser, setIsGetUser] = useState(false);
+const {user}= useUserStore()
+  useEffect(()=>{
+    console.log("calling get user before")
+    if(!isGetUser && !loading) getUser().then(()=> setIsGetUser(true)) 
+    console.log("calling get user after")
+    return
+  },[isGetUser,getUser, loading]);
+
+  useEffect(()=>{
+      console.log("okay",user)
+    if(isGetUser && user){
+      console.log("user",user)
+      push("/chat-window")
+    }
+    return 
+  },[user,isGetUser,push]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });

@@ -58,6 +58,25 @@ export const useAuth = () => {
     }
   };
 
+  const getUser = async () => {
+    try {
+      setLoading(true);
+      const { data } = await request.get("auth/user");
+      setLoading(false);    
+      if (data.id) {      
+        StorageService.setAuthData(data.accessToken, data.refreshToken);
+        StorageService.setUserData(data)
+        setUser(data)
+      }
+    } catch (err: any) {
+      setLoading(false);
+      console.log(err);
+      toast.error(err.response.data.message, {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    }
+  };
+
   const sendEmailVerification = async (email: string) => {
     
     try {
@@ -112,7 +131,7 @@ export const useAuth = () => {
     }
   }
 
-  return { login, register, sendEmailVerification, sendEmailForForgotPassword, resetPassword, loading };
+  return { login, register, sendEmailVerification, sendEmailForForgotPassword, resetPassword, getUser, loading };
 };
 
 
