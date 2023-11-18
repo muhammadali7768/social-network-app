@@ -45,16 +45,10 @@ const login = (req, res) => {
           message: "Email or Password does not match!",
         });
       }
-      var token = jwt.sign(
-        { id: user.id, email: user.email, name: user.username },
-        process.env.API_AUTH_SECRET,
-        {
-          expiresIn: 86400, // 24 hours
-        }
-      );
+    
+      let {token, refreshToken}= generateTokens(user)
 
-      const refreshToken = jwt.sign({ id: user.id, email: user.email, name: user.username },
-         process.env.REFRESH_TOKEN_SECRET);
+    //  const refreshToken=generateTokens(user);
 
       res.status(200).send({
         id: user.id,
@@ -68,6 +62,24 @@ const login = (req, res) => {
       res.status(500).send({ message: err.message });
     });
 };
+
+
+const refreshToken=async(req, res) => {
+  const refToken = req.body.token;
+  console.log(req.body)
+
+  if (!refToken) return res.sendStatus(401);
+  try {
+    const user = jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET);
+    let {token, refreshToken} = await generateTokens(user);
+
+    res.json({ token, refreshToken });
+  } catch (err) {
+    console.log("Error", err)
+    res.sendStatus(403);
+  }
+};
+
 
 // Get User
 const user = function (req, res) {
@@ -95,4 +107,17 @@ const logout = (req, res, next) => {
   res.json({ message: "logout user successfully" });
 };
 
-export { login, register, user, logout };
+const generateTokens=async(user)=>{
+  var token = jwt.sign(
+    { id: user.id, email: user.email, username: user.username },
+    process.env.API_AUTH_SECRET,
+    {
+      expiresIn: 86400, // 24 hours
+    }
+  );
+  const refreshToken = jwt.sign({ id: user.id, email: user.email, username: user.username },
+    process.env.REFRESH_TOKEN_SECRET);
+    return {token, refreshToken}
+}
+
+export { login, register, user, logout, refreshToken };
