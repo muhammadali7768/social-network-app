@@ -27,7 +27,7 @@ const login = (req, res) => {
       email: req.body.email,
     },
   })
-    .then((user) => {
+    .then(async(user) => {
       if (!user) {
         return res
           .status(404)
@@ -46,11 +46,8 @@ const login = (req, res) => {
         });
       }
     
-      let {token, refreshToken}= generateTokens(user)
-
-    //  const refreshToken=generateTokens(user);
-
-      res.status(200).send({
+      let {token, refreshToken}=await generateTokens(user)
+       res.status(200).send({
         id: user.id,
         username: user.username,
         email: user.email,
@@ -82,18 +79,19 @@ const refreshToken=async(req, res) => {
 
 
 // Get User
-const user = function (req, res) {
+const user = async(req, res)=> {
   var token = req.headers.authorization;
   if (token) {
     // verifies secret and checks if the token is expired
     jwt.verify(
       token.replace(/^Bearer\s/, ""),
       process.env.API_AUTH_SECRET,
-      function (err, decoded) {
+      async(err, decoded) =>{
         if (err) {
           return res.status(401).json({ message: "unauthorized" });
         } else {
-          return res.json({ user: decoded });
+          let {token, refreshToken}= await generateTokens(decoded)
+          return res.json({ ...decoded, accessToken: token, refreshToken: refreshToken });
         }
       }
     );
