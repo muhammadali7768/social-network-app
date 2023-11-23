@@ -15,16 +15,12 @@ const LoginForm: React.FC = () => {
   const [isGetUser, setIsGetUser] = useState(false);
 const {user}= useUserStore()
   useEffect(()=>{
-    console.log("calling get user before")
     if(!isGetUser && !loading) getUser().then(()=> setIsGetUser(true)) 
-    console.log("calling get user after")
     return
   },[isGetUser,getUser, loading]);
 
   useEffect(()=>{
-      console.log("okay",user)
     if(isGetUser && user){
-      console.log("user",user)
       push("/chat-window")
     }
     return 
@@ -36,7 +32,6 @@ const {user}= useUserStore()
 
   const handleSubmit = async(e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(loginData);
     await login(loginData);
   
   };

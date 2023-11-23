@@ -2,12 +2,14 @@ import ChatInput from '@/components/chat/ChatInput'
 import ListItem from '@/components/chat/ContactItem'
 import ContactList from '@/components/chat/ContactList'
 import MessageList from '@/components/chat/MessageList'
+import ChatWindowHeader from '@/components/layout/ChatWindowHeader'
 
 export default function ChatWindow() {
   return (
     <main
       className={`flex min-h-screen flex-col items-center`}
     >     
+    <ChatWindowHeader />
     <div className='flex flex-col h-screen w-full gap-4 bg-slate-300 overflow-hidden'>
       <div className='flex flex-row w-full h-screen bg-slate-100'>
         {/* Contact List Starts */}

@@ -24,7 +24,6 @@ export const useAuth = () => {
         StorageService.setUserData(data)
         setUser(data)
         cookie.set("token", data.accessToken, { expires: 1 / 24 });
-        console.log("USER DATA :",data)
         push('/chat-window')
       }
     } catch (err: any) {
