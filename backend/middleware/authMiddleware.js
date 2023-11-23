@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-
-const verifyToken = (req, res, next) => {
+import { redisClient } from "../config/redis.js";
+const verifyToken = async(req, res, next) => {
   let token = req.headers.authorization
 
   if (!token) {
@@ -9,7 +9,16 @@ const verifyToken = (req, res, next) => {
     });
   }
   try{
-  const decoded= jwt.verify(token.replace(/^Bearer\s/, ''), process.env.API_AUTH_SECRET);
+    const _token=token.replace(/^Bearer\s/, '')
+  const decoded= jwt.verify(_token, process.env.API_AUTH_SECRET);
+  console.log("token",_token)
+  const isValidToken = await validateToken(decoded.id, _token);
+  console.log("isValidToken",isValidToken)
+  if(!isValidToken){
+    return res.status(401).send({
+      message: "Token is not valid"
+    });
+  }
   req.userId = decoded.id;
   next();
 }catch(error){
@@ -22,5 +31,22 @@ const verifyToken = (req, res, next) => {
   return res.status(500).json({ message: 'Internal Server Error' });
 }
 };
+
+const validateToken = async (userId, token) => {
+  try{
+await redisClient.connect();
+  try {
+    console.log("connected")
+   console.log("Promise")
+    const result= await redisClient.sIsMember(`user_tokens:${userId}`, token);
+    return result;
+  } finally {
+    await redisClient.disconnect(); 
+  }
+}catch(err){
+  console.log(err)
+}
+};
+
 
 export {verifyToken}

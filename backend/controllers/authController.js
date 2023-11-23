@@ -1,7 +1,7 @@
 import prisma from "../config/db.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-
+import { redisClient } from "../config/redis.js";
 const register = (req, res) => {
   // Save User to Database
   prisma.user
@@ -41,12 +41,14 @@ const login = (req, res) => {
 
       if (!passwordIsValid) {
         return res.status(401).send({
-          // accessToken: null,
           message: "Email or Password does not match!",
         });
       }
     
       let {token, refreshToken}=await generateTokens(user)
+      await redisClient.connect();
+      await redisClient.sAdd(`user_tokens:${user.id}`, token);
+      await redisClient.disconnect();
        res.status(200).send({
         id: user.id,
         username: user.username,
@@ -100,9 +102,20 @@ const user = async(req, res)=> {
   }
 };
 
-const logout = (req, res, next) => {
-  console.log("logout is called");
-  res.json({ message: "logout user successfully" });
+const logout = async(req, res) => {
+  const token = req.headers.authorization;
+  console.log(req.userId);
+  console.log("token", token);  
+  try {
+    await redisClient.connect();  
+    await redisClient.sRem(`user_tokens:${req.userId}`, token.replace(/^Bearer\s/, ""));  
+    res.json({ message: "Logout user successfully" });
+  } catch (error) {
+    console.error("Error removing token:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await redisClient.disconnect();
+  }
 };
 
 const generateTokens=async(user)=>{
