@@ -2,7 +2,6 @@ import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { ILoginFormData } from '@/interfaces/auth.interfaces';
 import Button from '../Button';
 import { useAuth } from '@/hooks/useAuth';
-import StorageService from "@/services/storage";
 import { useRouter } from "next/router";
 import useUserStore from "@/hooks/useUserStore";
 const LoginForm: React.FC = () => {
@@ -20,7 +19,8 @@ const {user}= useUserStore()
   },[isGetUser,getUser, loading]);
 
   useEffect(()=>{
-    if(isGetUser && user){
+    if(isGetUser && user?.email){
+      console.log("user",user)
       push("/chat-window")
     }
     return 

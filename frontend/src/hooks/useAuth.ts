@@ -9,7 +9,7 @@ import useUserStore from "@/hooks/useUserStore";
 
 
 export const useAuth = () => {
-  const { setUser } = useUserStore();
+  const { setUser, clearUserStore } = useUserStore();
   const { push } = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -130,7 +130,26 @@ export const useAuth = () => {
     }
   }
 
-  return { login, register, sendEmailVerification, sendEmailForForgotPassword, resetPassword, getUser, loading };
+  const logout = async () => {
+    try {
+      setLoading(true);
+      const res = await request.get("auth/logout");
+      setLoading(false);
+      clearUserStore();
+      if (res.status===200) {
+        StorageService.clearUserData();
+        clearUserStore();
+        push('/')
+      }
+    } catch (err: any) {
+      setLoading(false);
+      toast.error(err.response.data.message, {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    }
+  };
+
+  return { login, register, sendEmailVerification, sendEmailForForgotPassword, resetPassword, getUser, logout, loading };
 };
 
 
