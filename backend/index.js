@@ -6,6 +6,7 @@ import {createServer} from 'node:http'
 const http= createServer(app);
 import {initializeSocket,getIO} from './config/socketio.js'
 await initializeSocket(http);
+import { redisClient } from "./config/redis.js";
 
 import { connectProducer, sendMessage } from "./kafka/producer.js";
 import { connectConsumer, subscribeToRoom,stopConsumer } from "./kafka/consumer.js";
@@ -40,11 +41,24 @@ io.on("connection", (socket) => {
 });
 
 const PORT=process.env.PORT || 3000;
-http.listen(PORT, async () => {
-
+const httpServer=http.listen(PORT, async () => {
+  await redisClient.connect()
   //await stopConsumer()
-  
- 
-
   console.log(`Server is running on port ${PORT}`);
 });
+
+// Listen for shutdown signals
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
+// Cleanup function to be called on shutdown
+async function cleanup() {
+  console.log('Cleaning up and disconnecting from Redis...');
+  
+  await redisClient.disconnect();
+
+  httpServer.close(() => {
+    console.log('Server closed. Exiting process...');
+    process.exit(0);
+  });
+}

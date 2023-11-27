@@ -46,9 +46,7 @@ const login = (req, res) => {
       }
     
       let {token, refreshToken}=await generateTokens(user)
-      await redisClient.connect();
       await redisClient.sAdd(`user_tokens:${user.id}`, token);
-      await redisClient.disconnect();
        res.status(200).send({
         id: user.id,
         username: user.username,
@@ -107,14 +105,11 @@ const logout = async(req, res) => {
   console.log(req.userId);
   console.log("token", token);  
   try {
-    await redisClient.connect();  
     await redisClient.sRem(`user_tokens:${req.userId}`, token.replace(/^Bearer\s/, ""));  
     res.json({ message: "Logout user successfully" });
   } catch (error) {
     console.error("Error removing token:", error);
     res.status(500).json({ error: "Internal Server Error" });
-  } finally {
-    await redisClient.disconnect();
   }
 };
 

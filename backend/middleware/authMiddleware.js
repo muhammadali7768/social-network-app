@@ -33,20 +33,14 @@ const verifyToken = async(req, res, next) => {
 };
 
 const validateToken = async (userId, token) => {
-  try{
-await redisClient.connect();
   try {
-    console.log("connected")
-   console.log("Promise")
-    const result= await redisClient.sIsMember(`user_tokens:${userId}`, token);
+      const result = await redisClient.sIsMember(`user_tokens:${userId}`, token);
     return result;
-  } finally {
-    await redisClient.disconnect(); 
+  } catch (error) {
+    console.error("Error validating token:", error);
   }
-}catch(err){
-  console.log(err)
-}
 };
+
 
 
 export {verifyToken}
