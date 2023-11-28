@@ -3,8 +3,22 @@ import ListItem from '@/components/chat/ContactItem'
 import ContactList from '@/components/chat/ContactList'
 import MessageList from '@/components/chat/MessageList'
 import ChatWindowHeader from '@/components/layout/ChatWindowHeader'
+import { useEffect, useState } from 'react'
+import { useUser } from '@/hooks/useUser'
+import useUserStore from '@/hooks/useUserStore'
+import { IListUser } from "@/interfaces/auth.interfaces";
 
 export default function ChatWindow() {
+  const {getUsers}= useUser()
+  const {usersList}= useUserStore()
+  const [isGetUsersList, setIsGetUsersList] = useState(false);
+  useEffect(()=>{
+    if(!isGetUsersList){
+      getUsers()
+      setIsGetUsersList(true)
+    }
+  }, [getUsers,isGetUsersList])
+
   return (
     <main
       className={`flex min-h-screen flex-col items-center`}
@@ -18,17 +32,9 @@ export default function ChatWindow() {
        <label>Contant List</label>
     </nav>
     <ContactList>
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
-      <ListItem />
+      {usersList && usersList.map((user:IListUser)=>{
+       return <ListItem key={user.username} {...user} /> 
+      })}
       </ContactList>
       </div> {/* Contact List Ends */}
       <div className="basis-3/4 border">

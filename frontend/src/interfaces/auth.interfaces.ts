@@ -1,4 +1,5 @@
 interface IUser {
+    id: Number;
     username: string;
     email: string;
     password: string;
@@ -13,5 +14,7 @@ interface IUser {
   
    interface IResetPasswordFormData  extends Pick<IUser, 'password' | 'token'> {}
 
-  export type { IUser, ILoginFormData, IRegisterFormData, IFortgotPasswordFormData, IResetPasswordFormData };
+   interface IListUser extends Pick<IUser, 'id'| 'username'| 'email'> {}
+
+  export type { IUser, ILoginFormData, IRegisterFormData, IFortgotPasswordFormData, IResetPasswordFormData, IListUser };
   
