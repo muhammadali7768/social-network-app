@@ -1,14 +1,13 @@
 // useUserStore.ts
 import { create } from 'zustand';
-import { IUser } from '@/interfaces/auth.interfaces';
+import { IUser, IListUser } from '@/interfaces/auth.interfaces';
 
 type UserWithoutPassword = Pick<IUser, 'username' | 'email' | 'token'>;
-type ListUser=Pick<IUser, 'id'| 'username'| 'email'>
 interface UserStore {
   user: UserWithoutPassword | null;
-  usersList: ListUser[]
+  usersList: IListUser[]
   setUser: (newUser: UserWithoutPassword) => void;
-  setUsersList: (newList: ListUser[])=> void;
+  setUsersList: (newList: IListUser[])=> void;
   clearUserStore: ()=>void
 }
 
@@ -19,7 +18,7 @@ const useUserStore = create<UserStore>(
   setUser: (newUser) => {
     set({ user: newUser });
   },
-  setUsersList: (newList: ListUser[])=>{
+  setUsersList: (newList: IListUser[])=>{
     set({usersList: newList})
   },
   clearUserStore: () => {set({ user: null })},
