@@ -46,7 +46,6 @@ const login = (req, res) => {
       }
     
       let {token, refreshToken}=await generateTokens(user)
-      await redisClient.sAdd(`user_tokens:${user.id}`, token);
        res.status(200).send({
         id: user.id,
         username: user.username,
@@ -62,6 +61,7 @@ const login = (req, res) => {
 
 
 const refreshToken=async(req, res) => {
+  console.log("Refresh Token is called")
   const refToken = req.body.token;
   console.log(req.body)
 
@@ -69,7 +69,6 @@ const refreshToken=async(req, res) => {
   try {
     const user = jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET);
     let {token, refreshToken} = await generateTokens(user);
-
     res.json({ token, refreshToken });
   } catch (err) {
     console.log("Error", err)
@@ -90,8 +89,7 @@ const user = async(req, res)=> {
         if (err) {
           return res.status(401).json({ message: "unauthorized" });
         } else {
-          let {token, refreshToken}= await generateTokens(decoded)
-          return res.json({ ...decoded, accessToken: token, refreshToken: refreshToken });
+          return res.json({ ...decoded});
         }
       }
     );
@@ -123,6 +121,7 @@ const generateTokens=async(user)=>{
   );
   const refreshToken = jwt.sign({ id: user.id, email: user.email, username: user.username },
     process.env.REFRESH_TOKEN_SECRET);
+    await redisClient.sAdd(`user_tokens:${user.id}`, token);
     return {token, refreshToken}
 }
 
