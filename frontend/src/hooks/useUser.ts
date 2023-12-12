@@ -11,7 +11,7 @@ export const useUser = () => {
 const getUsers = async () => {
     try {
       setLoading(true);
-      const { data } = await request.get("/users");
+      const { data } = await request.get("/users/all");
       setLoading(false);  
       console.log("users",data)  
       if (data.users) {   

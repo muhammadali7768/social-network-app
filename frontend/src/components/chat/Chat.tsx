@@ -9,7 +9,7 @@ const Chat = () => {
   const [socket, setSocket] = useState<any>(null);
   
   useEffect(() => {
-    const socketInstance = io('http://localhost:3000'); 
+    const socketInstance = io('http://localhost:3001'); 
     setSocket(socketInstance)
     socketInstance.on('connect', () => {
       console.log('Connected to Socket.IO');

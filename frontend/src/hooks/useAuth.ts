@@ -60,7 +60,7 @@ export const useAuth = () => {
   const getUser = async () => {
     try {
       setLoading(true);
-      const { data } = await request.get("auth/user");
+      const { data } = await request.get("auth/current-user");
       setLoading(false);    
       if (data.id) {   
         StorageService.setUserData(data)
