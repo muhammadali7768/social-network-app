@@ -1,8 +1,8 @@
-import {kafka} from '../config/kafkaClient.js'
+import {kafka} from '../config/kafka.client'
 
 const admin = kafka.admin();
 
-async function createTopics(topic) {
+async function createTopics(topic:string) {
     await admin.connect();
 
     const topicToCreate = `${topic}`;
@@ -25,5 +25,4 @@ async function createTopics(topic) {
   
     await admin.disconnect();
 }
-
-export {createTopics}
+ export {createTopics}

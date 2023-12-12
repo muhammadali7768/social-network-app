@@ -1,8 +1,10 @@
-import prisma from "../config/db.js";
+import prisma from "../config/db";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import { redisClient } from "../config/redis.js";
-const register = (req, res) => {
+import bcrypt from "bcrypt";
+import { Request,Response } from "express";
+import { redisClient } from "../config/redis";
+import { IUser } from "../interfaces/users.interface";
+const register = (req:Request, res:Response) => {
   // Save User to Database
   prisma.user
     .create({
@@ -21,7 +23,7 @@ const register = (req, res) => {
 };
 
 // Login
-const login = (req, res) => {
+const login = (req:Request, res:Response) => {
   prisma.user.findUnique({
     where: {
       email: req.body.email,
@@ -31,7 +33,7 @@ const login = (req, res) => {
       if (!user) {
         return res
           .status(404)
-          .send({ message: "Email or Password does not match!" });
+          .send({ message: "Email or password does not match!" });
       }
 
       var passwordIsValid = bcrypt.compareSync(
@@ -41,11 +43,12 @@ const login = (req, res) => {
 
       if (!passwordIsValid) {
         return res.status(401).send({
-          message: "Email or Password does not match!",
+          message: "Email or password does not match!",
         });
       }
-    
-      let {token, refreshToken}=await generateTokens(user)
+      const {password,...userWithoutPassword}=user
+      const usr:IUser= userWithoutPassword;
+      let {token, refreshToken}=await generateTokens(usr)
        res.status(200).send({
         id: user.id,
         username: user.username,
@@ -60,16 +63,16 @@ const login = (req, res) => {
 };
 
 
-const refreshToken=async(req, res) => {
-  console.log("Refresh Token is called")
+const refreshToken=async(req:Request, res:Response) => {
+  console.log("Refresh token is called")
   const refToken = req.body.token;
   console.log(req.body)
 
   if (!refToken) return res.sendStatus(401);
   try {
-    const user = jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET);
+    const user = jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET!) as IUser;
     let {token, refreshToken} = await generateTokens(user);
-    res.json({ token, refreshToken });
+    res.send({ token, refreshToken });
   } catch (err) {
     console.log("Error", err)
     res.sendStatus(403);
@@ -78,49 +81,53 @@ const refreshToken=async(req, res) => {
 
 
 // Get User
-const user = async(req, res)=> {
+const user = async(req:Request, res:Response)=> {
   var token = req.headers.authorization;
   if (token) {
     // verifies secret and checks if the token is expired
     jwt.verify(
       token.replace(/^Bearer\s/, ""),
-      process.env.API_AUTH_SECRET,
+      process.env.API_AUTH_SECRET!,
       async(err, decoded) =>{
         if (err) {
-          return res.status(401).json({ message: "unauthorized" });
+          return res.status(401).send({ message: "unauthorized" });
         } else {
-          return res.json({ ...decoded});
+          return res.send(decoded);
         }
       }
     );
   } else {
-    return res.status(401).json({ message: "unauthorized" });
+    return res.status(401).send({ message: "unauthorized" });
   }
 };
 
-const logout = async(req, res) => {
+const logout = async(req:Request, res:Response) => {
   const token = req.headers.authorization;
-  console.log(req.userId);
+  if(!token){
+    return res.status(401).send({error: "No token provided"});
+    }
+  
+  console.log(req.currentUser);
   console.log("token", token);  
   try {
-    await redisClient.sRem(`user_tokens:${req.userId}`, token.replace(/^Bearer\s/, ""));  
-    res.json({ message: "Logout user successfully" });
+    await redisClient.sRem(`user_tokens:${req.currentUser?.id}`, token.replace(/^Bearer\s/, ""));  
+    res.send({ message: "Logout user successfully" });
   } catch (error) {
     console.error("Error removing token:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).send({ error: "Internal Server Error" });
   }
 };
 
-const generateTokens=async(user)=>{
+const generateTokens=async(user:IUser)=>{
   var token = jwt.sign(
     { id: user.id, email: user.email, username: user.username },
-    process.env.API_AUTH_SECRET,
+    process.env.API_AUTH_SECRET!,
     {
       expiresIn: 86400, // 24 hours
     }
   );
   const refreshToken = jwt.sign({ id: user.id, email: user.email, username: user.username },
-    process.env.REFRESH_TOKEN_SECRET);
+    process.env.REFRESH_TOKEN_SECRET!);
     await redisClient.sAdd(`user_tokens:${user.id}`, token);
     return {token, refreshToken}
 }
