@@ -21,6 +21,11 @@ app.use(router)
 
 const chatConsumer=new ChatConsumer();
 io.on("connection", (socket) => {
+  if (socket.recovered) {
+   console.log("Revoverd********************")
+  } else {
+    console.log("New connection")
+  }
   socket.on("subscribe", async(topic) => {
     createTopics(topic)
     console.log("user subscribe socketio", topic)

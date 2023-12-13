@@ -1,6 +1,6 @@
 import { Consumer, EachMessagePayload } from 'kafkajs';
 import { kafka } from '../config/kafka.client';
-import { getIO } from '../config/socketio';
+import { SocketIO } from '../config/socketio';
 
 let consumer:Consumer;
 let subscribedRoom:string;

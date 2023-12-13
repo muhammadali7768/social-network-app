@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 
 export class SocketIO {
-  public io: Server;
+  private io: Server;
   constructor(server: HttpServer) {
     this.io = new Server(server, {
       cors: {
