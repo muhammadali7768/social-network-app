@@ -5,14 +5,14 @@ const app = express();
 import {createServer} from 'node:http'
 const http= createServer(app);
 import {SocketIO} from './config/socketio'
-import { redisClient } from "./config/redis";
+import { RedisClient } from "./config/redis";
 
 import { connectProducer, sendMessage } from "./kafka/producer";
 // import { connectConsumer, subscribeToRoom,stopConsumer } from "./kafka/consumer";
 import { ChatConsumer } from "./kafka/chat.consumer";
 import { createTopics } from "./kafka/admin";
 import router from "./routes/index";
- const io= new SocketIO(http).getIO();
+
 app.use(express.json());
 app.use(cors({ origin: process.env.ALLOWED_ORIGINS!.split(' ') }));
 console.log(process.env.ALLOWED_ORIGINS!.split(' '))
@@ -20,31 +20,9 @@ app.use(router)
 
 
 const chatConsumer=new ChatConsumer();
-io.on("connection", (socket) => {
-  if (socket.recovered) {
-   console.log("Revoverd********************")
-  } else {
-    console.log("New connection")
-  }
-  socket.on("subscribe", async(topic) => {
-    createTopics(topic)
-    console.log("user subscribe socketio", topic)
-    socket.join(topic)
-    chatConsumer.subscribeToTopic(topic)
-   // await connectConsumer();
-    // await subscribeToRoom(topic);
-    
-  });
-
-  socket.on("chatMessage",async (msgObj)=>{
-    const {senderId,groupId, message}=msgObj
-    await sendMessage(groupId, message)
-  })
-});
-
 const PORT=process.env.PORT || 3000;
+const redisClient= RedisClient.getInstance();
 const httpServer=http.listen(PORT, async () => {
-  await redisClient.connect()
   await startServices()
   //await stopConsumer()
   console.log(`Server is running on port ${PORT}`);
@@ -55,6 +33,35 @@ const startServices=async()=>{
   await connectProducer(); 
   await chatConsumer.startConsumer();
   // await connectConsumer() 
+  const io= new SocketIO(http, redisClient).getIO();
+  io.on("connection", (socket) => {
+    const count = io.engine.clientsCount;
+    console.log("Connected Users",count)
+    if (socket.recovered) {
+     console.log("Revoverd********************")
+    } else {
+      console.log("New connection")
+    }
+    socket.on("subscribe", async(topic) => {
+      createTopics(topic)
+      console.log("user subscribe socketio", topic)
+      socket.join(topic)
+      chatConsumer.subscribeToTopic(topic)
+     // await connectConsumer();
+      // await subscribeToRoom(topic);
+      
+    });
+  
+    socket.on("chatMessage",async (msgObj)=>{
+      const {senderId,groupId, message}=msgObj
+      await sendMessage(groupId, message)
+    })
+    socket.on('disconnect', () => {
+      console.log('User disconnected');
+    });
+  });
+
+ 
 }
 
 // Listen for shutdown signals

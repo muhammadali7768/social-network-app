@@ -2,8 +2,9 @@ import prisma from "../config/db";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Request,Response } from "express";
-import { redisClient } from "../config/redis";
+import { RedisClient } from "../config/redis";
 import { IUser } from "../interfaces/users.interface";
+const redisClient=RedisClient.getInstance().getRedisClient(); 
 const register = (req:Request, res:Response) => {
   // Save User to Database
   prisma.user
@@ -108,7 +109,7 @@ const logout = async(req:Request, res:Response) => {
     }
   
   console.log(req.currentUser);
-  console.log("token", token);  
+  console.log("token", token); 
   try {
     await redisClient.sRem(`user_tokens:${req.currentUser?.id}`, token.replace(/^Bearer\s/, ""));  
     res.send({ message: "Logout user successfully" });

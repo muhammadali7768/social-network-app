@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
-import { redisClient } from "../config/redis";
+import { RedisClient } from "../config/redis";
 import { Request, Response, NextFunction } from "express";
 import { IUser } from "../interfaces/users.interface";
 
+const redisClient=RedisClient.getInstance().getRedisClient(); 
 
 declare global {
   namespace Express {
