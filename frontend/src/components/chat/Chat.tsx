@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from "react";
-import io from "socket.io-client";
+import { initSocket } from "@/config/socketio";
 
 type Message={message:string, senderId: string, receieverId?: string, room?:string }; 
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState<string>("");
-  const [socket, setSocket] = useState<any>(null);
-  
+  // const [socket, setSocket] = useState<any>(null);
+  const socket = initSocket(); 
   useEffect(() => {
-    const socketInstance = io('http://localhost:3001'); 
-    setSocket(socketInstance)
-    socketInstance.on('connect', () => {
+    // setSocket(socket)
+    socket.on('connect', () => {
       console.log('Connected to Socket.IO');
-      socketInstance.emit('subscribe', 'chat');
+      socket.emit('subscribe', 'chat');
     });   
 
-    socketInstance.on("message", (message: Message) => {
+    socket.on("message", (message: Message) => {
         console.log("message",message)
       setMessages((prevMessages) => [...prevMessages, message]);
     });
 
     return () => {
-        socketInstance.disconnect();
+        socket.disconnect();
     };
-  },[]);
+  },[socket]);
 
   const sendMessage = () => {
     const msgObj:Message ={
