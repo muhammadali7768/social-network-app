@@ -2,7 +2,7 @@ import { Kafka, Message, Producer, ProducerBatch, TopicMessages } from 'kafkajs'
 import { kafka } from "../config/kafka.client";
 import { IMessage } from '../interfaces/message.interface';
 
-export default class ProducerFactory {
+export class ChatProducer {
   private producer: Producer
 
   constructor() {

@@ -7,9 +7,10 @@ const http= createServer(app);
 import {SocketIO} from './config/socketio'
 import { RedisClient } from "./config/redis";
 
-import { connectProducer, sendMessage } from "./kafka/producer";
+// import { connectProducer, sendMessage } from "./kafka/producer";
 // import { connectConsumer, subscribeToRoom,stopConsumer } from "./kafka/consumer";
 import { ChatConsumer } from "./kafka/chat.consumer";
+import { ChatProducer } from "./kafka/chat.producer";
 import { createTopics } from "./kafka/admin";
 import router from "./routes/index";
 
@@ -20,6 +21,7 @@ app.use(router)
 
 
 const chatConsumer=new ChatConsumer();
+const chatProducer=new ChatProducer();
 const PORT=process.env.PORT || 3000;
 const redisClient= RedisClient.getInstance();
 const httpServer=http.listen(PORT, async () => {
@@ -30,7 +32,7 @@ const httpServer=http.listen(PORT, async () => {
 
 const startServices=async()=>{
   // await initializeSocket(http);
-  await connectProducer(); 
+   await chatProducer.start()
   await chatConsumer.startConsumer();
   // await connectConsumer() 
   const io= new SocketIO(http, redisClient).getIO();
@@ -53,8 +55,8 @@ const startServices=async()=>{
     });
   
     socket.on("chatMessage",async (msgObj)=>{
-      const {senderId,groupId, message}=msgObj
-      await sendMessage(groupId, message)
+      const {senderId,room, message}=msgObj
+      await chatProducer.sendMessage({sender: senderId,room,message})
     })
     socket.on('disconnect', () => {
       console.log('User disconnected');
