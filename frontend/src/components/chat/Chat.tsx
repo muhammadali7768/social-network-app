@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 
-type Message={message:string, senderId: string, receieverId?: string, groupId?:string }; 
+type Message={message:string, senderId: string, receieverId?: string, room?:string }; 
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,7 +30,7 @@ const Chat = () => {
     const msgObj:Message ={
         message: messageInput,
         senderId: 'ali',
-        groupId: 'chat',
+        room: 'chat',
 
     }
     socket.emit("chatMessage", msgObj);
