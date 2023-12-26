@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { initSocket } from "@/config/socketio";
+import { IMessage } from "@/interfaces/message.interface";
 
-type Message={message:string, senderId: string, receieverId?: string, room?:string }; 
 
 const Chat = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const [messageInput, setMessageInput] = useState<string>("");
   // const [socket, setSocket] = useState<any>(null);
   const socket = initSocket(); 
@@ -15,7 +15,7 @@ const Chat = () => {
       socket.emit('subscribe', 'chat');
     });   
 
-    socket.on("message", (message: Message) => {
+    socket.on("message", (message: IMessage) => {
         console.log("message",message)
       setMessages((prevMessages) => [...prevMessages, message]);
     });
@@ -26,7 +26,7 @@ const Chat = () => {
   },[socket]);
 
   const sendMessage = () => {
-    const msgObj:Message ={
+    const msgObj:IMessage ={
         message: messageInput,
         senderId: 'ali',
         room: 'chat',
@@ -39,7 +39,7 @@ const Chat = () => {
   return (
     <div className="flex flex-col">
       <div className="border p-4 mb-4">
-        {messages.map((msg:Message, index) => (
+        {messages.map((msg:IMessage, index) => (
           <div key={index} className="mb-2">
             {msg.message}
           </div>

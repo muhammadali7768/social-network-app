@@ -7,11 +7,15 @@ import { useEffect, useState } from 'react'
 import { useUser } from '@/hooks/useUser'
 import useUserStore from '@/hooks/useUserStore'
 import { IListUser } from "@/interfaces/auth.interfaces";
+import { initSocket } from '@/config/socketio'
+import { IMessage } from '@/interfaces/message.interface'
 
 export default function ChatWindow() {
   const {getUsers}= useUser()
   const {usersList}= useUserStore()
   const [isGetUsersList, setIsGetUsersList] = useState(false);
+  const [messages, setMessages] = useState<IMessage[]>([]);
+  const socket=initSocket();
   useEffect(()=>{
     if(!isGetUsersList){
       getUsers()
@@ -19,6 +23,24 @@ export default function ChatWindow() {
     }
   }, [getUsers,isGetUsersList])
 
+  useEffect(()=>{
+    socket.connect()
+    socket.on('connect', () => {
+      console.log('Connected to Socket.IO');
+      socket.emit('subscribe', 'chat');
+    });
+
+    socket.on("message", (message: IMessage) => {
+      console.log("message",message)
+    setMessages((prevMessages) => [...prevMessages, message]);
+  });
+
+  return () => {
+      socket.disconnect();
+  };
+  },[socket])
+
+ 
   return (
     <main
       className={`flex min-h-screen flex-col items-center`}
@@ -40,10 +62,10 @@ export default function ChatWindow() {
       <div className="basis-3/4 border">
       <div className='flex flex-col w-full h-screen bg-white'>
       <div className="h-5/6">
-        <MessageList />
+        <MessageList messages={messages} />
       </div>
       <div className="h-1/6 bg-slate-100 py-6">
-        <ChatInput />
+        <ChatInput/>
       </div>
       </div>
       
