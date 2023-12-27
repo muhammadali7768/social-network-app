@@ -1,7 +1,7 @@
 // useUserStore.ts
 import { create } from 'zustand';
 import { IUser, IListUser } from '@/interfaces/auth.interfaces';
-
+import { persist, createJSONStorage } from "zustand/middleware";
 //type UserWithoutPassword = Pick<IUser, 'username' | 'email' | 'token'>;
 interface UserStore {
   user: IListUser | null;
@@ -11,8 +11,8 @@ interface UserStore {
   clearUserStore: ()=>void
 }
 
-const useUserStore = create<UserStore>(
-  (set) => ({
+const useUserStore = create<UserStore>()(
+  persist<UserStore>((set) => ({
   user: null,
   usersList: [],
   setUser: (newUser) => {
@@ -22,6 +22,9 @@ const useUserStore = create<UserStore>(
     set({usersList: newList})
   },
   clearUserStore: () => {set({ user: null })},
+}),{
+  name: 'social-app-user-storage',
+  skipHydration: true,
 }));
 
 export default useUserStore;

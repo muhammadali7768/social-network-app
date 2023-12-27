@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { IMessage } from '@/interfaces/message.interface';
 import useUserStore from "@/hooks/useUserStore";
 interface IProps {
@@ -6,7 +6,8 @@ interface IProps {
 }
 const MessageList = ({messages}:IProps) => {
 
-  const {user}= useUserStore()
+  const user= useUserStore(state=>state.user)
+ 
   return (
     <div className="flex flex-col h-full p-10  overflow-y-auto">
       {messages.map((message:IMessage) => (

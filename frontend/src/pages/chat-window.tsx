@@ -12,7 +12,7 @@ import { IMessage } from '@/interfaces/message.interface'
 
 export default function ChatWindow() {
   const {getUsers}= useUser()
-  const {usersList}= useUserStore()
+  const usersList= useUserStore(state=>state.usersList)
   const [isGetUsersList, setIsGetUsersList] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const socket=initSocket();

@@ -5,8 +5,9 @@ import useUserStore from "@/hooks/useUserStore";
 const ChatInput = () => {
   const [message, setMessage] = useState('');
   const socket=initSocket()
-  const {user}=useUserStore()
+  const user= useUserStore(state=>state.user)
   const sendMessage=()=>{
+    console.log("User",user)
     if (message.trim() !== '') {
       const msgObj:IMessage ={
         message: message,
