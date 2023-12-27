@@ -1,15 +1,16 @@
 import React, {useState} from 'react';
 import { initSocket } from '@/config/socketio'
 import { IMessage } from '@/interfaces/message.interface';
-
+import useUserStore from "@/hooks/useUserStore";
 const ChatInput = () => {
   const [message, setMessage] = useState('');
   const socket=initSocket()
+  const {user}=useUserStore()
   const sendMessage=()=>{
     if (message.trim() !== '') {
       const msgObj:IMessage ={
         message: message,
-        senderId: 'ali',
+        senderId: user!.id,
         room: 'chat',
 
     }

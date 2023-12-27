@@ -20,7 +20,7 @@ const getUsers = async () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      toast.error(err.response.data.message, {
+      toast.error(err?.response?.data?.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }

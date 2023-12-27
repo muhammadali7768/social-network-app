@@ -1,7 +1,7 @@
 export interface IMessage {
     id?: number;
   message: string;
-  senderId: string;
+  senderId: number;
   receieverId?: string;
   room?: string;
 }

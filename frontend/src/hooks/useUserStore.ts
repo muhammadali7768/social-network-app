@@ -2,11 +2,11 @@
 import { create } from 'zustand';
 import { IUser, IListUser } from '@/interfaces/auth.interfaces';
 
-type UserWithoutPassword = Pick<IUser, 'username' | 'email' | 'token'>;
+//type UserWithoutPassword = Pick<IUser, 'username' | 'email' | 'token'>;
 interface UserStore {
-  user: UserWithoutPassword | null;
+  user: IListUser | null;
   usersList: IListUser[]
-  setUser: (newUser: UserWithoutPassword) => void;
+  setUser: (newUser: IListUser) => void;
   setUsersList: (newList: IListUser[])=> void;
   clearUserStore: ()=>void
 }
