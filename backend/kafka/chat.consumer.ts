@@ -37,7 +37,8 @@ export class ChatConsumer {
         console.log(`- ${prefix} ${message.key}#${message.value}`);
         if (message.value) {
           const stringValue = message.value.toString("utf8") ?? "";
-          this.socket.emit('message', stringValue)           
+         const messageData = JSON.parse(stringValue)
+          this.socket.emit('message', {...messageData, id:message.offset})           
         }
        
       },
@@ -92,7 +93,6 @@ export class ChatConsumer {
             for (const message of batch.messages) {
               const prefix = `${batch.topic}[${batch.partition} | ${message.offset}] / ${message.timestamp}`;
               console.log(`- ${prefix} ${message.key}#${message.value}`);
-              this.processMessage(message)
               if (message.value) {
                 const stringValue = message.value.toString("utf8") ?? "";
                 //   console.log("consumer message", stringValue)
@@ -107,9 +107,7 @@ export class ChatConsumer {
       console.log("Error while getting kafka messages", error);
     }
   }
-  public async processMessage(message:any) {
-    io.to(topic).emit('message', message.value?.toString());
-  }
+
  
   public async shutdown(): Promise<void> {
     await this.kafkaConsumer.disconnect();

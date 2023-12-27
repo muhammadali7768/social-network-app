@@ -26,7 +26,7 @@ export class ChatProducer {
     await this.producer.send({
       topic: message.room,
       messages: [
-        { value: JSON.stringify({ message: message.message, sender: message.sender }), timestamp: Date.now().toString(), partition: 0 },
+        { value: JSON.stringify({ message: message.message, senderId: message.sender }), timestamp: Date.now().toString(), partition: 0 },
       ],
     });
   }
