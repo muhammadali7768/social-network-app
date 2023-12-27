@@ -21,4 +21,6 @@ export class RedisClient {
   public disconnect = async () => {
     await this.redisC.disconnect();
   };
+
+ 
 }

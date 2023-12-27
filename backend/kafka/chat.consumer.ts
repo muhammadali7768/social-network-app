@@ -3,26 +3,31 @@ import {
   ConsumerSubscribeTopics,
   Kafka,
   EachMessagePayload,
+  EachBatchPayload,
 } from "kafkajs";
-
+import { Server } from "socket.io";
+// import { SocketIO } from "../config/socketio";
 import { kafka } from "../config/kafka.client";
 export class ChatConsumer {
   private kafkaConsumer: Consumer;
   private subscribedTopic: string;
+  private socket:Server
 
-  public constructor() {
+  public constructor(io:Server) {
     this.kafkaConsumer = this.createKafkaConsumer();
     this.subscribedTopic = "";
+    this.socket=io;
   }
 
   public async subscribeToTopic(topicName: string) {
     const topic: ConsumerSubscribeTopics = {
       topics: [`${topicName}`],
-      fromBeginning: false,
+      fromBeginning: true,
     };
 
     if (this.subscribedTopic != topicName) {
       await this.kafkaConsumer.subscribe(topic);
+      console.log("already subscribed")
     }
     this.subscribedTopic = topicName;
     await this.kafkaConsumer.run({
@@ -30,14 +35,19 @@ export class ChatConsumer {
         const { topic, partition, message } = messagePayload;
         const prefix = `${topic}[${partition} | ${message.offset}] / ${message.timestamp}`;
         console.log(`- ${prefix} ${message.key}#${message.value}`);
+        if (message.value) {
+          const stringValue = message.value.toString("utf8") ?? "";
+          this.socket.emit('message', stringValue)           
+        }
+       
       },
     });
 
-    this.getMessageHistory(topicName);
   }
   public async startConsumer(): Promise<void> {
     try {
       await this.kafkaConsumer.connect();
+      console.log("kafka consumer connected");
     } catch (error) {
       console.log("Error: ", error);
     }
@@ -55,27 +65,64 @@ export class ChatConsumer {
       },
     });
   }
-  public async getMessages(topic: string, partition: number, offset: string) {
-    let messages: {}[] = [];
-
-    await this.kafkaConsumer.seek({
-      topic,
-      partition: partition,
-      offset: offset,
-    });
-    await this.kafkaConsumer.run({
-      eachMessage: async ({ topic, partition, message }) => {
-        messages.push(message);
-      },
-    });
-    return { messages: messages };
+  public async getChatMessages(topic: string, partition: number, offset: string) {
+    // let messages: {}[] = [];
+    try {
+      //   this.kafkaConsumer.run({
+      //     autoCommit: false,
+      //     eachMessage: async ({ topic, message }) =>  Promise.resolve()
+      // })
+      //   await this.kafkaConsumer.seek({
+      //     topic,
+      //     partition: partition,
+      //     offset: offset,
+      //   });
+      const messages: {}[] = []
+      await this.kafkaConsumer
+        .run({
+          // eachMessage: async ({ topic, partition, message }) => {
+          //   if(message.value){
+          //   const stringValue = message.value.toString('utf8') ?? '';
+          //   console.log("consumer message", stringValue)
+          //   messages.push(JSON.parse(stringValue));
+          //   }
+          // },
+          eachBatch: async (eachBatchPayload: EachBatchPayload) => {
+            const { batch } = eachBatchPayload;
+            for (const message of batch.messages) {
+              const prefix = `${batch.topic}[${batch.partition} | ${message.offset}] / ${message.timestamp}`;
+              console.log(`- ${prefix} ${message.key}#${message.value}`);
+              this.processMessage(message)
+              if (message.value) {
+                const stringValue = message.value.toString("utf8") ?? "";
+                //   console.log("consumer message", stringValue)
+                messages.push(JSON.parse(stringValue));                
+              }
+            }
+          },
+        })
+  
+      return { messages: messages };
+    } catch (error) {
+      console.log("Error while getting kafka messages", error);
+    }
   }
+  public async processMessage(message:any) {
+    io.to(topic).emit('message', message.value?.toString());
+  }
+ 
   public async shutdown(): Promise<void> {
     await this.kafkaConsumer.disconnect();
   }
 
   private createKafkaConsumer(): Consumer {
-    const consumer = kafka.consumer({ groupId: "consumer-group" });
-    return consumer;
+    try {
+      const consumer = kafka.consumer({ groupId: "consumer-group" });
+      console.log("Consumer group started");
+      return consumer;
+    } catch (error) {
+      console.log("Error creating kafka consumer", error);
+      throw error;
+    }
   }
 }
