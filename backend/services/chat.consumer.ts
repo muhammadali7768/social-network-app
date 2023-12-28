@@ -10,6 +10,7 @@ import { Server } from "socket.io";
 // import { SocketIO } from "../config/socketio";
 import { kafka } from "../config/kafka.client";
 import { IMessage } from "../interfaces/message.interface";
+import { saveMessage } from "../controllers/message.controller";
 export class ChatConsumer {
   private kafkaConsumer: Consumer;
   private subscribedTopic: string;
@@ -41,14 +42,7 @@ export class ChatConsumer {
           const stringValue = message.value.toString("utf8") ?? "";
          const messageData:IMessage = JSON.parse(stringValue)
           this.socket.emit('message', {...messageData, id:message.offset})  
-          prisma.mainRoomMessage.create({
-            data: {
-              message: messageData.message,
-              senderId: messageData.senderId
-            }
-          }).then((msg) => {
-            console.log("Message Saved to DB:", msg);
-          })         
+           saveMessage(messageData)        
         }
        
       },

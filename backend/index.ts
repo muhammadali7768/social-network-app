@@ -9,9 +9,9 @@ import { RedisClient } from "./config/redis";
 
 // import { connectProducer, sendMessage } from "./kafka/producer";
 // import { connectConsumer, subscribeToRoom,stopConsumer } from "./kafka/consumer";
-import { ChatConsumer } from "./kafka/chat.consumer";
-import { ChatProducer } from "./kafka/chat.producer";
-import { createTopics } from "./kafka/admin";
+import { ChatConsumer } from "./services/chat.consumer";
+import { ChatProducer } from "./services/chat.producer";
+import { createTopics } from "./services/admin";
 import router from "./routes/index";
 
 app.use(express.json());
