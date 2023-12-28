@@ -19,5 +19,25 @@ model User {
   username   String @unique
   
   password String
+  privateMessagesSent  PrivateMessage[] @relation("sender")
+  privateMessagesReceived PrivateMessage[] @relation("recipient")
+  mainRoomMessagesSent MainRoomMessage[] @relation("mainRoomSender")
+}
 
+model PrivateMessage {
+  id Int @id @default(autoincrement())
+  senderId Int
+  recipientId Int
+  message     String
+  recipient User @relation("recipient",fields: [recipientId], references: [id])
+  sender User @relation("sender",fields: [senderId], references: [id])  
+  timestamp   DateTime @default(now())
+}
+
+model MainRoomMessage {
+  id   Int      @id @default(autoincrement())
+  senderId    Int
+  message     String
+  sender      User     @relation("mainRoomSender", fields: [senderId], references: [id])
+  timestamp   DateTime @default(now())
 }
