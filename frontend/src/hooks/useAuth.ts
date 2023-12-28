@@ -9,7 +9,9 @@ import useUserStore from "@/hooks/useUserStore";
 
 
 export const useAuth = () => {
-  const { setUser, clearUserStore } = useUserStore();
+  const setUser= useUserStore(state=>state.setUser)
+  const clearUserStore=useUserStore(state=>state.clearUserStore)
+  //const { setUser, clearUserStore } = useUserStore();
   const { push } = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +31,7 @@ export const useAuth = () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      toast.error(err.response.data.message, {
+      toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
       if (err.response?.data?.error === "EmailNotVerified") push("/auth/verify-email")
@@ -51,7 +53,7 @@ export const useAuth = () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      toast.error(err.response.data.message, {
+      toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
@@ -69,7 +71,7 @@ export const useAuth = () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      toast.error(err.response.data.message, {
+      toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
@@ -89,7 +91,7 @@ export const useAuth = () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      toast.error(err.response.data.message, {
+      toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
@@ -106,7 +108,7 @@ export const useAuth = () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      toast.error(err.response.data.message, {
+      toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
@@ -123,7 +125,7 @@ export const useAuth = () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      toast.error(err.response.data.message, {
+      toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
@@ -142,7 +144,7 @@ export const useAuth = () => {
       }
     } catch (err: any) {
       setLoading(false);
-      toast.error(err.response.data.message, {
+      toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }

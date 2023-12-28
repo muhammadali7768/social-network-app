@@ -5,7 +5,7 @@ import useUserStore from "@/hooks/useUserStore";
 
 
 export const useUser = () => {
-  const { setUsersList } = useUserStore();
+  const setUsersList= useUserStore(state=>state.setUsersList)
   const [loading, setLoading] = useState(false);
 
 const getUsers = async () => {

@@ -12,7 +12,7 @@ const LoginForm: React.FC = () => {
     password: '',
   });
   const [isGetUser, setIsGetUser] = useState(false);
-const {user}= useUserStore()
+  const user= useUserStore(state=>state.user)
   useEffect(()=>{
     if(!isGetUser && !loading) getUser().then(()=> setIsGetUser(true)) 
     return

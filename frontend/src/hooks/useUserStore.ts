@@ -12,7 +12,7 @@ interface UserStore {
 }
 
 const useUserStore = create<UserStore>()(
-  persist<UserStore>((set) => ({
+  persist((set) => ({
   user: null,
   usersList: [],
   setUser: (newUser) => {
@@ -24,7 +24,8 @@ const useUserStore = create<UserStore>()(
   clearUserStore: () => {set({ user: null })},
 }),{
   name: 'social-app-user-storage',
-  skipHydration: true,
+  partialize: (state)=> ({ user: state.user})
+ // skipHydration: true,
 }));
 
 export default useUserStore;
