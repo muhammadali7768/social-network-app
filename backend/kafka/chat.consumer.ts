@@ -1,3 +1,4 @@
+import prisma from "../config/db";
 import {
   Consumer,
   ConsumerSubscribeTopics,
@@ -8,6 +9,7 @@ import {
 import { Server } from "socket.io";
 // import { SocketIO } from "../config/socketio";
 import { kafka } from "../config/kafka.client";
+import { IMessage } from "../interfaces/message.interface";
 export class ChatConsumer {
   private kafkaConsumer: Consumer;
   private subscribedTopic: string;
@@ -37,8 +39,16 @@ export class ChatConsumer {
         console.log(`- ${prefix} ${message.key}#${message.value}`);
         if (message.value) {
           const stringValue = message.value.toString("utf8") ?? "";
-         const messageData = JSON.parse(stringValue)
-          this.socket.emit('message', {...messageData, id:message.offset})           
+         const messageData:IMessage = JSON.parse(stringValue)
+          this.socket.emit('message', {...messageData, id:message.offset})  
+          prisma.mainRoomMessage.create({
+            data: {
+              message: messageData.message,
+              senderId: messageData.senderId
+            }
+          }).then((msg) => {
+            console.log("Message Saved to DB:", msg);
+          })         
         }
        
       },

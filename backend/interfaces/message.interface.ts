@@ -1,5 +1,6 @@
 export interface IMessage {
   room: string;
   message: string;
-  sender: string
+  senderId:number;
+  recipientId?:number
 }

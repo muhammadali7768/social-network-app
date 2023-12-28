@@ -53,7 +53,7 @@ const startServices = async () => {
     socket.on("chatMessage", async (msgObj) => {
       const { senderId, room, message } = msgObj;
       // socket.emit('message', msgObj);
-       await chatProducer.sendMessage({sender: senderId,room,message})
+       await chatProducer.sendMessage({senderId: senderId,room,message})
     });
     socket.on("disconnect", () => {
       console.log("User disconnected");
