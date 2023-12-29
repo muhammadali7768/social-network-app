@@ -13,10 +13,20 @@ const saveMessage = (messageData:IMessage) => {
       })  
 };
 
-const getMainRoomMessages=(senderId:number,recipientId:number)=>{
-    prisma.mainRoomMessage.findMany({
+const getMainRoomMessages=async()=>{
+   return await prisma.mainRoomMessage.findMany({
     }).then(messages=>{
         return messages
     })
 }
-export { saveMessage, getMainRoomMessages };
+const getPrivateMessages=(senderId:number,recipientId:number)=>{
+    prisma.privateMessage.findMany({
+        where:{
+            senderId,
+            recipientId
+        }
+    }).then(messages=>{
+        return messages
+    })
+}
+export { saveMessage, getMainRoomMessages, getPrivateMessages };

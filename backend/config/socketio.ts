@@ -1,14 +1,20 @@
 import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { createAdapter } from "@socket.io/redis-streams-adapter";
-import {RedisClient} from "./redis";
+import { RedisClient } from "./redis";
+import { IUser } from "../interfaces/users.interface";
+
+interface DefaultEventsMap {
+  [event: string]: (...args: any[]) => void;
+}
 
 export class SocketIO {
   private io: Server;
   constructor(server: HttpServer, redisClient: RedisClient) {
-    console.log("SocketIO constructor")
-    this.io = new Server(server, {
+    console.log("SocketIO constructor");
+    this.io = new Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, {user:IUser}>(server, {
       adapter: createAdapter(redisClient.getRedisClient()),
+      connectionStateRecovery: {},
       cors: {
         origin: "http://localhost:3000",
         methods: ["GET", "POST"],
