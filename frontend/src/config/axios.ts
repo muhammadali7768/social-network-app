@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import {jwtDecode} from 'jwt-decode';
 import NavigateService from '../services/navigate';
 import StorageService from '../services/storage';
-
+import useUserStore from '@/hooks/useUserStore';
 import { API_URL } from '.';
 
 const request = axios.create({
@@ -78,6 +78,7 @@ const resetTokenAndReattemptRequest = async (
       }
       const { token, refreshToken } = response.data;
       StorageService.setAuthData(token, refreshToken);
+     useUserStore.getState().updateUserToken(token)
       isAlreadyFetchingAccessToken = false;
       onAccessTokenFetched(token);
     }

@@ -9,10 +9,10 @@ import useUserStore from '@/hooks/useUserStore'
 import { IListUser } from "@/interfaces/auth.interfaces";
 import { initSocket } from '@/config/socketio'
 import { IMessage } from '@/interfaces/message.interface'
-
 export default function ChatWindow() {
   const {getUsers}= useUser()
   const usersList= useUserStore(state=>state.usersList)
+  const user=useUserStore(state=>state.user)
   const [isGetUsersList, setIsGetUsersList] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const socket=initSocket();
@@ -24,6 +24,8 @@ export default function ChatWindow() {
   }, [getUsers,isGetUsersList])
 
   useEffect(()=>{
+    console.log("Connecting to socket",user)
+    socket.auth={token: user?.accessToken}
     socket.connect()
     socket.on('connect', () => {
       console.log('Connected to Socket.IO');
@@ -31,8 +33,17 @@ export default function ChatWindow() {
     });
 
     socket.on("message", (message: IMessage) => {
-      console.log("message",message)
     setMessages((prevMessages) => [...prevMessages, message]);
+  });
+
+  socket.on("messageHistory",(messageHistory: IMessage[])=>{
+    if(messageHistory){
+    setMessages((prevMessages) => [...prevMessages, ...messageHistory]);
+    }
+  })
+
+  socket.onAny((event, ...args) => {
+    console.log(event, args);
   });
 
   return () => {

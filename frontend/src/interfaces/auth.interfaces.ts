@@ -3,7 +3,8 @@ interface IUser {
     username: string;
     email: string;
     password: string;
-    token: string
+    accessToken: string
+    refreshToken:string
   }
 
   interface ILoginFormData extends Pick<IUser, 'email' | 'password'> {}
@@ -12,7 +13,7 @@ interface IUser {
 
   interface IFortgotPasswordFormData  extends Pick<IUser, 'email'> {}
   
-   interface IResetPasswordFormData  extends Pick<IUser, 'password' | 'token'> {}
+   interface IResetPasswordFormData  extends Pick<IUser, 'password' | 'accessToken'> {}
 
    interface IListUser extends Pick<IUser, 'id'| 'username'| 'email'> {}
 

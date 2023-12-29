@@ -71,6 +71,8 @@ export const useAuth = () => {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
+      StorageService.clearUserData()
+      clearUserStore()
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
