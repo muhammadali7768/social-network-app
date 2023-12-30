@@ -60,4 +60,10 @@ export class RedisClient {
       })
     );
   }
+
+  public findOnlineUser=async(userId:number)=>{
+   const user= await this.redisC.hGet(`online_users`, userId.toString())
+   if(user) return JSON.parse(user)
+   else null
+  }
 }
