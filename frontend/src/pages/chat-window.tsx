@@ -3,7 +3,7 @@ import ListItem from "@/components/chat/ContactItem";
 import ContactList from "@/components/chat/ContactList";
 import MessageList from "@/components/chat/MessageList";
 import ChatWindowHeader from "@/components/layout/ChatWindowHeader";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useUser } from "@/hooks/useUser";
 import useUserStore from "@/hooks/useUserStore";
 import { IListUser } from "@/interfaces/auth.interfaces";
@@ -15,8 +15,35 @@ export default function ChatWindow() {
   const user = useUserStore((state) => state.user);
 
   const [messages, setMessages] = useState<IMessage[]>([]);
-
   const socket = initSocket();
+
+  const [isGetUsersList, setIsGetUsersList] = useState(false);
+  const { getOnlineUsers } = useUser();
+
+  const updateOrAddUser = useCallback(
+    (userId: number, status: string, user?: IListUser) => {
+      const userExist = usersList.find((user) => user.id === userId);
+      if (userExist) {
+        setUsersList(
+          //Update existing user status
+          usersList.map((oldUser) => {
+            if (oldUser.id === userExist.id) {
+              return { ...oldUser, status: status };
+            } else return oldUser;
+          })
+        );
+      } else if (user) {
+        setUsersList([...usersList, user]);
+      }
+    },[setUsersList, usersList]
+  );
+
+  useEffect(() => {
+    if (!isGetUsersList) {
+      getOnlineUsers();
+      setIsGetUsersList(true);
+    }
+  }, [getOnlineUsers, isGetUsersList]);
 
   useEffect(() => {
     console.log("Connecting to socket", user);
@@ -31,15 +58,12 @@ export default function ChatWindow() {
         alert("Connection Error while connecting to chat");
       }
     });
-    socket.on("users", (users: IListUser[]) => {
-      setUsersList(users);
-    });
+
     return () => {
       socket.disconnect();
       socket.off("connect_error");
-      socket.off("users")
     };
-  }, [socket, user, setUsersList]);
+  }, [socket, user]);
   useEffect(() => {
     const setMainMessages = (message: IMessage) => {
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -59,6 +83,21 @@ export default function ChatWindow() {
       socket.off("message", setMainMessages);
     };
   }, [socket]);
+
+  useEffect(() => {
+    socket.on("userConnected", (user: IListUser) => {
+      console.log("New User Connected", user)
+     updateOrAddUser(user.id, 'online', user)
+    });
+
+    socket.on("userDisconnected", (userId: number) => {
+      updateOrAddUser(userId, "offline");
+    });
+    return () => {
+      socket.off("userDisconnected");
+      socket.off("userConnected");
+    };
+  }, [socket, usersList, setUsersList, updateOrAddUser]);
 
   return (
     <main className={`flex min-h-screen flex-col items-center`}>

@@ -5,6 +5,7 @@ interface IUser {
     password: string;
     accessToken: string
     refreshToken:string
+    status:string
   }
 
   interface ILoginFormData extends Pick<IUser, 'email' | 'password'> {}
@@ -15,7 +16,7 @@ interface IUser {
   
    interface IResetPasswordFormData  extends Pick<IUser, 'password' | 'accessToken'> {}
 
-   interface IListUser extends Pick<IUser, 'id'| 'username'| 'email'> {}
+   interface IListUser extends Pick<IUser, 'id'| 'username'| 'email' |  'status'> {}
 
   export type { IUser, ILoginFormData, IRegisterFormData, IFortgotPasswordFormData, IResetPasswordFormData, IListUser };
   

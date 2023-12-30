@@ -26,8 +26,26 @@ const getUsers = async () => {
     }
   };
 
+  const getOnlineUsers = async () => {
+    try {
+      setLoading(true);
+      const { data } = await request.get("/users/online-users");
+      setLoading(false);  
+      console.log("users",data)  
+      if (data.users) {   
+        setUsersList(data.users)
+      }
+    } catch (err: any) {
+      setLoading(false);
+      console.log(err);
+      toast.error(err?.response?.data?.message, {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    }
+  };
+
   
-  return { getUsers, loading };
+  return { getUsers, getOnlineUsers, loading };
 };
 
 
