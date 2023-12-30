@@ -10,19 +10,13 @@ import { IListUser } from "@/interfaces/auth.interfaces";
 import { initSocket } from "@/config/socketio";
 import { IMessage } from "@/interfaces/message.interface";
 export default function ChatWindow() {
-  const { getUsers } = useUser();
   const usersList = useUserStore((state) => state.usersList);
+  const setUsersList = useUserStore((state) => state.setUsersList);
   const user = useUserStore((state) => state.user);
-  const [isGetUsersList, setIsGetUsersList] = useState(false);
+
   const [messages, setMessages] = useState<IMessage[]>([]);
-  const [isHistory, setIsHistory] = useState(false);
+
   const socket = initSocket();
-  useEffect(() => {
-    if (!isGetUsersList) {
-      getUsers();
-      setIsGetUsersList(true);
-    }
-  }, [getUsers, isGetUsersList]);
 
   useEffect(() => {
     console.log("Connecting to socket", user);
@@ -32,11 +26,20 @@ export default function ChatWindow() {
       console.log("Connected to Socket.IO");
       socket.emit("subscribe", "chat");
     });
-
+    socket.on("connect_error", (err) => {
+      if (err.message === "invalid token") {
+        alert("Connection Error while connecting to chat");
+      }
+    });
+    socket.on("users", (users: IListUser[]) => {
+      setUsersList(users);
+    });
     return () => {
       socket.disconnect();
+      socket.off("connect_error");
+      socket.off("users")
     };
-  }, [socket, user]);
+  }, [socket, user, setUsersList]);
   useEffect(() => {
     const setMainMessages = (message: IMessage) => {
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -47,17 +50,15 @@ export default function ChatWindow() {
         setMessages(messageHistory);
       }
     };
-   
+
     socket.on("messageHistory", setMessageHistory);
-     
+
     socket.on("message", setMainMessages);
 
     return () => {
       socket.off("message", setMainMessages);
     };
   }, [socket]);
-
-
 
   return (
     <main className={`flex min-h-screen flex-col items-center`}>

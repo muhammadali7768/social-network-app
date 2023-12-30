@@ -15,7 +15,7 @@ const getUsers = async () => {
       setLoading(false);  
       console.log("users",data)  
       if (data.users) {   
-        setUsersList(data.users)
+       // setUsersList(data.users)
       }
     } catch (err: any) {
       setLoading(false);
