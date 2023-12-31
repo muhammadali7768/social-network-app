@@ -18,7 +18,8 @@ export default function ChatWindow() {
   const socket = initSocket();
 
   const [isGetUsersList, setIsGetUsersList] = useState(false);
-  const { getOnlineUsers } = useUser();
+  const [isConnected, setIsConnected]=useState(false)
+ 
 
   const updateOrAddUser = useCallback(
     (userId: number, status: string, user?: IListUser) => {
@@ -28,6 +29,7 @@ export default function ChatWindow() {
           //Update existing user status
           usersList.map((oldUser) => {
             if (oldUser.id === userExist.id) {
+              console.log("user exists", userExist, status)
               return { ...oldUser, status: status };
             } else return oldUser;
           })
@@ -38,12 +40,12 @@ export default function ChatWindow() {
     },[setUsersList, usersList]
   );
 
-  useEffect(() => {
-    if (!isGetUsersList) {
-      getOnlineUsers();
-      setIsGetUsersList(true);
-    }
-  }, [getOnlineUsers, isGetUsersList]);
+  // useEffect(() => {
+  //   if (!isGetUsersList && isConnected) {
+  //     getOnlineUsers();
+  //     setIsGetUsersList(true);
+  //   }
+  // }, [getOnlineUsers, isGetUsersList, isConnected]);
 
   useEffect(() => {
     console.log("Connecting to socket", user);
@@ -52,6 +54,9 @@ export default function ChatWindow() {
     socket.on("connect", () => {
       console.log("Connected to Socket.IO");
       socket.emit("subscribe", "chat");
+      setIsConnected(true) 
+
+      console.log("Socket ID", socket.id)     
     });
     socket.on("connect_error", (err) => {
       if (err.message === "invalid token") {
@@ -59,18 +64,23 @@ export default function ChatWindow() {
       }
     });
 
+    socket.on("users", (users:IListUser[])=>{
+      console.log("online Users")
+      setUsersList(users);
+    })
+    
     return () => {
       socket.disconnect();
       socket.off("connect_error");
     };
-  }, [socket, user]);
+  }, [socket, user, setUsersList]);
   useEffect(() => {
     const setMainMessages = (message: IMessage) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     };
 
     const setMessageHistory = (messageHistory: IMessage[]) => {
-      if (messageHistory) {
+       if (messageHistory) {
         setMessages(messageHistory);
       }
     };
@@ -91,8 +101,13 @@ export default function ChatWindow() {
     });
 
     socket.on("userDisconnected", (userId: number) => {
+      console.log("User disconnected",userId)
       updateOrAddUser(userId, "offline");
     });
+
+    socket.io.on("reconnect",()=>{
+      console.log("RECONNECTING>>>>>>>>>>>>>>>>>>>>>>")
+    })
     return () => {
       socket.off("userDisconnected");
       socket.off("userConnected");
@@ -107,7 +122,7 @@ export default function ChatWindow() {
           {/* Contact List Starts */}
           <div className="basis-1/4 border  overflow-y-auto">
             <nav className="py-4 px-6 text-sm font-medium">
-              <label>Contant List</label>
+              <label>Contact List</label>
             </nav>
             <ContactList>
               {usersList &&
