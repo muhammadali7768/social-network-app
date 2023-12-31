@@ -31,29 +31,29 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
     req.currentUser = decoded;
     next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ message: "Invalid token" });
-    } else if (error instanceof jwt.TokenExpiredError) {
-      return res.status(401).json({ message: "Token expired" });
-    }
+   
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 const validateToken = async (token: string) => {
   const _token = token.replace(/^Bearer\s/, "");
-  const decoded =await jwt.verify(
-    _token,
-    process.env.API_AUTH_SECRET!
-  ) as IUser;
-
-  try {
+   try {
+    const decoded =await jwt.verify(
+      _token,
+      process.env.API_AUTH_SECRET!
+    ) as IUser;
     const result = await redisClient.sIsMember(`user_tokens:${decoded.id}`, _token);
     if(result){
       return decoded
     }
     return null;
   } catch (error) {
+    // if (error instanceof jwt.JsonWebTokenError) {
+    //   return res.status(401).json({ message: "Invalid token" });
+    // } else if (error instanceof jwt.TokenExpiredError) {
+    //   return res.status(401).json({ message: "Token expired" });
+    // }
     console.error("Error validating token:", error);
     return null
   }

@@ -34,6 +34,7 @@ export const startChatServices = async (
     const count = io.engine.clientsCount;
     console.log("Connected Users", count);
     const user = socket.data.user;
+
   
     socket.on("subscribe", async (topic) => {
       console.log("Subscribe Event");
@@ -44,7 +45,7 @@ export const startChatServices = async (
 
       const onlineUsers = await redisClient.getOnlineUsers("online_users");
       socket.emit("users",onlineUsers)
-      
+
       await chatConsumer.subscribeToTopic(topic);
       const messages = await getMainRoomMessages();
       socket.emit("messageHistory", messages);
