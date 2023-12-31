@@ -4,7 +4,6 @@ import ContactList from "@/components/chat/ContactList";
 import MessageList from "@/components/chat/MessageList";
 import ChatWindowHeader from "@/components/layout/ChatWindowHeader";
 import { useEffect, useState, useCallback } from "react";
-import { useUser } from "@/hooks/useUser";
 import useUserStore from "@/hooks/useUserStore";
 import { IListUser } from "@/interfaces/auth.interfaces";
 import { initSocket } from "@/config/socketio";
@@ -17,9 +16,6 @@ export default function ChatWindow() {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const socket = initSocket();
 
-  const [isGetUsersList, setIsGetUsersList] = useState(false);
-  const [isConnected, setIsConnected]=useState(false)
- 
 
   const updateOrAddUser = useCallback(
     (userId: number, status: string, user?: IListUser) => {
@@ -29,7 +25,7 @@ export default function ChatWindow() {
           //Update existing user status
           usersList.map((oldUser) => {
             if (oldUser.id === userExist.id) {
-              console.log("user exists", userExist, status)
+              console.log("user exists", userExist, status);
               return { ...oldUser, status: status };
             } else return oldUser;
           })
@@ -37,15 +33,11 @@ export default function ChatWindow() {
       } else if (user) {
         setUsersList([...usersList, user]);
       }
-    },[setUsersList, usersList]
+    },
+    [setUsersList, usersList]
   );
 
-  // useEffect(() => {
-  //   if (!isGetUsersList && isConnected) {
-  //     getOnlineUsers();
-  //     setIsGetUsersList(true);
-  //   }
-  // }, [getOnlineUsers, isGetUsersList, isConnected]);
+ 
 
   useEffect(() => {
     console.log("Connecting to socket", user);
@@ -54,33 +46,38 @@ export default function ChatWindow() {
     socket.on("connect", () => {
       console.log("Connected to Socket.IO");
       socket.emit("subscribe", "chat");
-      setIsConnected(true) 
-
-      console.log("Socket ID", socket.id)     
+      console.log("Socket ID", socket.id);
     });
     socket.on("connect_error", (err) => {
       if (err.message === "invalid token") {
         alert("Connection Error while connecting to chat");
       }
-    });
+    });  
 
-    socket.on("users", (users:IListUser[])=>{
-      console.log("online Users")
-      setUsersList(users);
-    })
-    
     return () => {
       socket.disconnect();
       socket.off("connect_error");
     };
-  }, [socket, user, setUsersList]);
+  }, [socket, user]);
+
+  useEffect(() => {
+    socket.on("users", (users: IListUser[]) => {
+      console.log("online Users");
+      setUsersList(users);
+    });
+
+    return () => {
+      socket.off("users");
+    };
+  }, [socket, setUsersList]);
+
   useEffect(() => {
     const setMainMessages = (message: IMessage) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     };
 
     const setMessageHistory = (messageHistory: IMessage[]) => {
-       if (messageHistory) {
+      if (messageHistory) {
         setMessages(messageHistory);
       }
     };
@@ -96,23 +93,23 @@ export default function ChatWindow() {
 
   useEffect(() => {
     socket.on("userConnected", (user: IListUser) => {
-      console.log("New User Connected", user)
-     updateOrAddUser(user.id, 'online', user)
+      console.log("New User Connected", user);
+      updateOrAddUser(user.id, "online", user);
     });
-
-    socket.on("userDisconnected", (userId: number) => {
-      console.log("User disconnected",userId)
-      updateOrAddUser(userId, "offline");
-    });
-
-    socket.io.on("reconnect",()=>{
-      console.log("RECONNECTING>>>>>>>>>>>>>>>>>>>>>>")
-    })
     return () => {
-      socket.off("userDisconnected");
       socket.off("userConnected");
     };
-  }, [socket, usersList, setUsersList, updateOrAddUser]);
+  }, [socket, updateOrAddUser]);
+
+  useEffect(() => {
+    socket.on("userDisconnected", (userId: number) => {
+      console.log("User disconnected", userId);
+      updateOrAddUser(userId, "offline");
+    });
+    return () => {
+      socket.off("userDisconnected");
+    };
+  }, [socket, updateOrAddUser]);
 
   return (
     <main className={`flex min-h-screen flex-col items-center`}>
