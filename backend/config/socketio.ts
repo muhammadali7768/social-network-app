@@ -7,12 +7,14 @@ import { IUser } from "../interfaces/users.interface";
 interface DefaultEventsMap {
   [event: string]: (...args: any[]) => void;
 }
-
+interface IAuthUser {
+  user: IUser
+}
 export class SocketIO {
-  private io: Server;
+  private io: Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, IAuthUser>;
   constructor(server: HttpServer, redisClient: RedisClient) {
     console.log("SocketIO constructor");
-    this.io = new Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, {user:IUser}>(server, {
+    this.io = new Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, IAuthUser>(server, {
       adapter: createAdapter(redisClient.getRedisClient()),
       connectionStateRecovery: {},
       cors: {

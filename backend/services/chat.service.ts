@@ -17,8 +17,8 @@ export const startChatServices = async (
   await chatProducer.start();
   await chatConsumer.startConsumer();
   await createTopics();
-  
-  io.use(async (socket, next) => {    
+
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) {
       return next(new Error("invalid token"));
@@ -31,16 +31,20 @@ export const startChatServices = async (
     next();
   });
   io.on("connection", async (socket) => {
-    
     const count = io.engine.clientsCount;
     console.log("Connected Users", count);
     const user = socket.data.user;
-    await redisClient.saveUser(user, "online");
-     const onlineUser = await redisClient.findOnlineUser(user.id);
-    socket.emit("userConnected", onlineUser);
+  
     socket.on("subscribe", async (topic) => {
-       console.log("Subscribe Event")
+      console.log("Subscribe Event");
       socket.join(topic);
+      await redisClient.saveUser(user, "online");
+      const onlineUser = await redisClient.findOnlineUser(user.id);
+      socket.to(topic).emit("userConnected", onlineUser);
+
+      const onlineUsers = await redisClient.getOnlineUsers("online_users");
+      socket.emit("users",onlineUsers)
+      
       await chatConsumer.subscribeToTopic(topic);
       const messages = await getMainRoomMessages();
       socket.emit("messageHistory", messages);
@@ -51,7 +55,6 @@ export const startChatServices = async (
       await chatProducer.sendMessage({ senderId: senderId, room, message });
     });
 
-  
     socket.on("disconnect", async () => {
       socket.broadcast.emit("userDisconnected", user.id);
       await redisClient.saveUser(user, "offline");
