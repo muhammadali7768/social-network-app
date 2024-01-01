@@ -8,11 +8,12 @@ import useUserStore from "@/hooks/useUserStore";
 import { IListUser } from "@/interfaces/auth.interfaces";
 import { initSocket } from "@/config/socketio";
 import { IMessage } from "@/interfaces/message.interface";
+import MainChatItem from "@/components/chat/MainChatItem";
 export default function ChatWindow() {
   const usersList = useUserStore((state) => state.usersList);
   const setUsersList = useUserStore((state) => state.setUsersList);
   const user = useUserStore((state) => state.user);
-
+  const [activeIndex, setActiveIndex] = useState(0);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const socket = initSocket();
 
@@ -122,9 +123,10 @@ export default function ChatWindow() {
               <label>Contact List</label>
             </nav>
             <ContactList>
+              <MainChatItem name="Main Chat" isActive={activeIndex===0} onShow={()=>setActiveIndex(0)} />
               {usersList &&
                 usersList.map((user: IListUser) => {
-                  return <ListItem key={user.username} {...user} />;
+                  return <ListItem key={user.username} user={user} isActive={activeIndex===user.id} onShow={()=> setActiveIndex(user.id)} />;
                 })}
             </ContactList>
           </div>{" "}
