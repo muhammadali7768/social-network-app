@@ -7,7 +7,7 @@ interface IProps {
 const MessageList = ({messages}:IProps) => {
 
   const user= useUserStore(state=>state.user)
- 
+ console.log("Messages",messages)
   return (
     <div className="flex flex-col h-full p-10  overflow-y-auto">
       {messages.map((message:IMessage) => (

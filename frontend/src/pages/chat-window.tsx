@@ -5,6 +5,7 @@ import MessageList from "@/components/chat/MessageList";
 import ChatWindowHeader from "@/components/layout/ChatWindowHeader";
 import { useEffect, useState, useCallback } from "react";
 import useUserStore from "@/hooks/useUserStore";
+import useChatStore from "@/hooks/useChatStore";
 import { IListUser } from "@/interfaces/auth.interfaces";
 import { initSocket } from "@/config/socketio";
 import { IMessage } from "@/interfaces/message.interface";
@@ -12,11 +13,20 @@ import MainChatItem from "@/components/chat/MainChatItem";
 export default function ChatWindow() {
   const usersList = useUserStore((state) => state.usersList);
   const setUsersList = useUserStore((state) => state.setUsersList);
+  const updateUserMessages = useUserStore((state) => state.updateUserMessages);
+  const {
+    mainChatMessages,
+    activeChatMessages,
+    setActiveChatMessages,
+    setMainChatMessages,
+    updateActiveChatMessages,
+    updateMainChatMessages,
+  } = useChatStore();
   const user = useUserStore((state) => state.user);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [messages, setMessages] = useState<IMessage[]>([]);
-  const socket = initSocket();
 
+  // const [messages, setMessages] = useState<IMessage[]>([]);
+  const socket = initSocket();
 
   const updateOrAddUser = useCallback(
     (userId: number, status: string, user?: IListUser) => {
@@ -38,8 +48,6 @@ export default function ChatWindow() {
     [setUsersList, usersList]
   );
 
- 
-
   useEffect(() => {
     console.log("Connecting to socket", user);
     socket.auth = { token: user?.accessToken };
@@ -53,7 +61,7 @@ export default function ChatWindow() {
       if (err.message === "invalid token") {
         alert("Connection Error while connecting to chat");
       }
-    });  
+    });
 
     return () => {
       socket.disconnect();
@@ -72,25 +80,45 @@ export default function ChatWindow() {
     };
   }, [socket, setUsersList]);
 
+  const setChatMessages = useCallback(
+    async (message: IMessage) => {
+      if (!message.recipientId || message.recipientId === 0) {
+        updateMainChatMessages(message);
+      } else if (message.recipientId && message.recipientId > 0) {
+        const msgConcernedUserId =
+          user?.id === message.senderId
+            ? message.recipientId
+            : message.senderId;
+        const msgUser = await usersList.find(
+          (usr) => usr.id === msgConcernedUserId
+        );
+        if (msgUser) updateUserMessages(msgUser.id, message);
+      } 
+      updateActiveChatMessages(message);
+    },
+    [
+      updateActiveChatMessages,
+      usersList,
+      updateMainChatMessages,
+      updateUserMessages,
+      user,
+    ]
+  );
   useEffect(() => {
-    const setMainMessages = (message: IMessage) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    };
-
     const setMessageHistory = (messageHistory: IMessage[]) => {
       if (messageHistory) {
-        setMessages(messageHistory);
+        setMainChatMessages(messageHistory);
       }
     };
 
     socket.on("messageHistory", setMessageHistory);
 
-    socket.on("message", setMainMessages);
+    socket.on("message", setChatMessages);
 
     return () => {
-      socket.off("message", setMainMessages);
+      socket.off("message", setChatMessages);
     };
-  }, [socket]);
+  }, [socket, setMainChatMessages, setChatMessages]);
 
   useEffect(() => {
     socket.on("userConnected", (user: IListUser) => {
@@ -112,6 +140,20 @@ export default function ChatWindow() {
     };
   }, [socket, updateOrAddUser]);
 
+  //Here index is user id for Private messages and 0 for main chat
+  const onChatChange = (index: number) => {
+    setActiveIndex(index);
+    if (index === 0) {
+      setActiveChatMessages(mainChatMessages);
+    } else if (index === user?.id) {
+      //TODO: Enable sending messages to himeself
+    } else {
+      const activeChatUser = usersList.find((u) => u.id === index);
+      console.log("Active User Chat", activeChatUser);
+      setActiveChatMessages(activeChatUser?.messages || []);
+    }
+  };
+
   return (
     <main className={`flex min-h-screen flex-col items-center`}>
       <ChatWindowHeader />
@@ -123,10 +165,21 @@ export default function ChatWindow() {
               <label>Contact List</label>
             </nav>
             <ContactList>
-              <MainChatItem name="Main Chat" isActive={activeIndex===0} onShow={()=>setActiveIndex(0)} />
+              <MainChatItem
+                name="Main Chat"
+                isActive={activeIndex === 0}
+                onShow={() => onChatChange(0)}
+              />
               {usersList &&
                 usersList.map((user: IListUser) => {
-                  return <ListItem key={user.username} user={user} isActive={activeIndex===user.id} onShow={()=> setActiveIndex(user.id)} />;
+                  return (
+                    <ListItem
+                      key={user.username}
+                      user={user}
+                      isActive={activeIndex === user.id}
+                      onShow={() => onChatChange(user.id)}
+                    />
+                  );
                 })}
             </ContactList>
           </div>{" "}
@@ -134,10 +187,10 @@ export default function ChatWindow() {
           <div className="basis-3/4 border">
             <div className="flex flex-col w-full h-screen bg-white">
               <div className="h-5/6">
-                <MessageList messages={messages} />
+                <MessageList key={activeIndex} messages={activeChatMessages} />
               </div>
               <div className="h-1/6 bg-slate-100 py-6">
-                <ChatInput />
+                <ChatInput index={activeIndex} key={activeIndex} />
               </div>
             </div>
           </div>

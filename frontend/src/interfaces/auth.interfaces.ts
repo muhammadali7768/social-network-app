@@ -1,3 +1,5 @@
+import { IMessage } from "./message.interface";
+
 interface IUser {
     id: number;
     username: string;
@@ -5,7 +7,9 @@ interface IUser {
     password: string;
     accessToken: string
     refreshToken:string
-    status:string
+    status:string,
+    messages: IMessage[]
+    isNewMessage:boolean
   }
 
   interface ILoginFormData extends Pick<IUser, 'email' | 'password'> {}
@@ -16,7 +20,7 @@ interface IUser {
   
    interface IResetPasswordFormData  extends Pick<IUser, 'password' | 'accessToken'> {}
 
-   interface IListUser extends Pick<IUser, 'id'| 'username'| 'email' |  'status'> {}
+   interface IListUser extends Pick<IUser, 'id'| 'username'| 'email' |  'status'| "messages"| "isNewMessage"> {}
 
   export type { IUser, ILoginFormData, IRegisterFormData, IFortgotPasswordFormData, IResetPasswordFormData, IListUser };
   
