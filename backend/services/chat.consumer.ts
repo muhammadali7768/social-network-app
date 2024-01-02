@@ -10,7 +10,7 @@ import { Server } from "socket.io";
 // import { SocketIO } from "../config/socketio";
 import { kafka } from "../config/kafka.client";
 import { IMessage } from "../interfaces/message.interface";
-import { saveMessage } from "../controllers/message.controller";
+import { saveMessage, savePrivateMessage} from "../controllers/message.controller";
 export class ChatConsumer {
   private kafkaConsumer: Consumer;
   private subscribedTopic: string;
@@ -41,8 +41,16 @@ export class ChatConsumer {
         if (message.value) {
           const stringValue = message.value.toString("utf8") ?? "";
          const messageData:IMessage = JSON.parse(stringValue)
-          this.socket.emit('message', {...messageData, id:message.offset})  
-           saveMessage(messageData)        
+          
+          if(messageData.recipientId && messageData.recipientId===0){
+            this.socket.emit('message', {...messageData, id:message.offset})
+           saveMessage(messageData) 
+          }else if(messageData.recipientId && messageData.recipientId >0){
+            let recipientId= messageData.recipientId.toString()
+            let senderId=messageData.senderId.toString()
+            this.socket.to(recipientId).to(senderId).emit('message', {...messageData, id:message.offset})
+            savePrivateMessage(messageData)
+          }       
         }
        
       },

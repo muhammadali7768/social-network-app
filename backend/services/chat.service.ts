@@ -17,6 +17,11 @@ export const startChatServices = async (
   await chatProducer.start();
   await chatConsumer.startConsumer();
   await createTopics();
+  // On services start we have to subscribe to both chat and private_chat topics
+  ["chat","private_chat"].forEach(async(topic:string)=>{
+    await chatConsumer.subscribeToTopic(topic);
+  })
+ 
 
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
@@ -35,25 +40,29 @@ export const startChatServices = async (
     console.log("Connected Users", count);
     const user = socket.data.user;
 
-  
     socket.on("subscribe", async (topic) => {
       console.log("Subscribe Event");
+      //Join the topic: chat | private_chat 
       socket.join(topic);
+      //Also join the logedin user socket
+      socket.join(user.id.toString())
       await redisClient.saveUser(user, "online");
       const onlineUser = await redisClient.findOnlineUser(user.id);
       socket.to(topic).emit("userConnected", onlineUser);
-
       const onlineUsers = await redisClient.getOnlineUsers("online_users");
-      socket.emit("users",onlineUsers)
-
-      await chatConsumer.subscribeToTopic(topic);
+      socket.emit("users", onlineUsers);
       const messages = await getMainRoomMessages();
       socket.emit("messageHistory", messages);
     });
 
     socket.on("chatMessage", async (msgObj) => {
-      const { senderId, room, message } = msgObj;
-      await chatProducer.sendMessage({ senderId: senderId, room, message });
+      const { senderId, room, message, recipientId } = msgObj;
+      await chatProducer.sendMessage({
+        senderId: senderId,
+        room,
+        message,
+        recipientId,
+      });
     });
 
     socket.on("disconnect", async () => {

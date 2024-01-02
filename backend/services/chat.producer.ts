@@ -23,12 +23,21 @@ export class ChatProducer {
 
   async  sendMessage(message: IMessage) {
     console.log(`Producer sent message: ${message} to topic: ${message.room}`);
+    if(message?.recipientId && message.recipientId ===0){
     await this.producer.send({
       topic: message.room,
       messages: [
         { value: JSON.stringify({ message: message.message, senderId: message.senderId }), timestamp: Date.now().toString(), partition: 0 },
       ],
     });
+  }else if (message?.recipientId && message.recipientId >0){
+    await this.producer.send({
+      topic: message.room,
+      messages: [
+        { value: JSON.stringify({ message: message.message, senderId: message.senderId, recipientId: message.recipientId }), timestamp: Date.now().toString(), partition: 0 },
+      ],
+    });
+  }
   }
  
 

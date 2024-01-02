@@ -29,4 +29,15 @@ const getPrivateMessages=(senderId:number,recipientId:number)=>{
         return messages
     })
 }
-export { saveMessage, getMainRoomMessages, getPrivateMessages };
+const savePrivateMessage=(messageData:IMessage)=>{
+    prisma.privateMessage.create({
+        data: {
+          message: messageData.message,
+          senderId: messageData.senderId,
+          recipientId: messageData.recipientId!
+        }
+      }).then((msg) => {
+        console.log("Private message saved to DB:", msg);
+      }) 
+}
+export { saveMessage, getMainRoomMessages, getPrivateMessages, savePrivateMessage };
