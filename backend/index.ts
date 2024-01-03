@@ -6,13 +6,14 @@ import { createServer } from "node:http";
 const http = createServer(app);
 import { startChatServices } from "./services/chat.service";
 import { RedisClient } from "./config/redis";
-
+import { errorHandler } from "./middleware/error-handler.middleware";
 import router from "./routes/index";
 
 app.use(express.json());
 app.use(cors({ origin: process.env.ALLOWED_ORIGINS!.split(" ") }));
 console.log(process.env.ALLOWED_ORIGINS!.split(" "));
 app.use(router);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 const redisClient = RedisClient.getInstance();
