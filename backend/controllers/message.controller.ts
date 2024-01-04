@@ -1,5 +1,4 @@
 import prisma from "../config/db";
-import { Request, Response } from "express";
 import { IMessage } from "../interfaces/message.interface";
 
 const saveMessage = (messageData:IMessage) => {

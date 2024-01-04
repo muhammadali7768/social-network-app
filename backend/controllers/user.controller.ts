@@ -20,10 +20,10 @@ const users = (req: Request, res: Response) => {
     });
 };
 
-const getOnlineUsers=async(req:Request,res:Response)=>{
-  const redisClient=RedisClient.getInstance();
+const getOnlineUsers = async (req: Request, res: Response) => {
+  const redisClient = RedisClient.getInstance();
   const onlineUsers = await redisClient.getOnlineUsers("online_users");
-  return res.json({users:onlineUsers})
-}
+  return res.json({ users: onlineUsers });
+};
 
 export { users, getOnlineUsers };

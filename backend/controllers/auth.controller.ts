@@ -116,7 +116,7 @@ const user = async (req: Request, res: Response) => {
 const logout = async (req: Request, res: Response) => {
   const token = req.headers.authorization;
   if (!token) {
-    throw new NotAuthorizedError()
+    throw new NotAuthorizedError();
   }
   try {
     await redisClient.sRem(
@@ -125,7 +125,7 @@ const logout = async (req: Request, res: Response) => {
     );
     res.status(200).send({});
   } catch (error) {
-   throw new InternalServerError("Unable to logout user properly")
+    throw new InternalServerError("Unable to logout user properly");
   }
 };
 

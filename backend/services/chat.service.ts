@@ -1,5 +1,5 @@
-import { ChatConsumer } from "./chat.consumer";
-import { ChatProducer } from "./chat.producer";
+import { ChatConsumer } from "./chat-consumer.service";
+import { ChatProducer } from "./chat-producer.service";
 import { createTopics } from "./admin";
 import { SocketIO } from "../config/socketio";
 import { Server } from "http";
