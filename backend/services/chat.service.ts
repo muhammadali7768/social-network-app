@@ -1,6 +1,6 @@
 import { ChatConsumer } from "./chat-consumer.service";
 import { ChatProducer } from "./chat-producer.service";
-import { createTopics } from "./admin";
+import { createTopics } from "./kafka-admin.service";
 import { SocketIO } from "../config/socketio";
 import { Server } from "http";
 import { RedisClient } from "../config/redis";

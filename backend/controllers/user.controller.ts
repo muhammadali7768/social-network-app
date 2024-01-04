@@ -1,6 +1,7 @@
 import prisma from "../config/db";
 import { Request, Response } from "express";
 import { RedisClient } from "../config/redis";
+import { NotFoundError } from "../errors/not-found.error";
 // Get All Users
 const users = (req: Request, res: Response) => {
   prisma.user
@@ -13,10 +14,10 @@ const users = (req: Request, res: Response) => {
     })
     .then(async (users) => {
       if (!users) {
-        return res.status(404).send({ message: "No Record Found" });
+        throw new NotFoundError("users not found")
       }
 
-      res.json({ users: users });
+      res.status(200).send({ users: users });
     });
 };
 
