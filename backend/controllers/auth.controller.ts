@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import { RedisClient } from "../config/redis";
-import { IUser } from "../interfaces/users.interface";
+import { IUser } from "../interfaces/user.interface";
 import { InternalServerError } from "../errors/internal-server.error";
 import { BadRequestError } from "../errors/bad-request.error";
 import { NotAuthorizedError } from "../errors/not-authorized.error";

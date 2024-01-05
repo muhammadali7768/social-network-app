@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { createAdapter } from "@socket.io/redis-streams-adapter";
 import { RedisClient } from "./redis";
-import { IUser } from "../interfaces/users.interface";
+import { IUser } from "../interfaces/user.interface";
 
 interface DefaultEventsMap {
   [event: string]: (...args: any[]) => void;

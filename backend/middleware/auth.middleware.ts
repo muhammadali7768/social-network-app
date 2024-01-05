@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { RedisClient } from "../config/redis";
 import { Request, Response, NextFunction } from "express";
-import { IUser } from "../interfaces/users.interface";
+import { IUser } from "../interfaces/user.interface";
 import { NotAuthorizedError } from "../errors/not-authorized.error";
 import { BadRequestError } from "../errors/bad-request.error";
 const redisClient = RedisClient.getInstance().getRedisClient();

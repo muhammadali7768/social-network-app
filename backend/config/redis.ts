@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from "redis";
-import { IUser } from "../interfaces/users.interface";
+import { IUser } from "../interfaces/user.interface";
 // const redisClient = createClient({ url: "redis://localhost:6379" })
 // .on('error', err => console.log('Redis Client Error', err))
 
