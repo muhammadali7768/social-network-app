@@ -34,7 +34,7 @@ authRouter.post("/login", [
 ],
 validateRequest, login);
 authRouter.post("/refresh_token", refreshToken);
-authRouter.get("/curren-user", verifyToken, user);
+authRouter.get("/current-user", verifyToken, user);
 authRouter.get("/logout", verifyToken, logout);
 
 export default authRouter;

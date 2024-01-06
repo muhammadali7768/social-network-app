@@ -14,17 +14,20 @@ declare global {
   }
 }
 const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-  let token = req.headers.authorization;
-
-  if (!token) {
+  console.log("Middleware Token",req.cookies.token)
+  //  let token = req.headers.authorization;
+  if (!req.cookies?.token) {
     throw new NotAuthorizedError();
   }
+  let token = req.cookies?.token;
+
   try {
     const decoded = await validateToken(token);
     if (decoded === null) {
       throw new NotAuthorizedError();
     }
     req.currentUser = decoded;
+    console.log("Decoded", decoded)
     next();
   } catch (error) {
     throw new BadRequestError("Unable to validate the user provided token");
@@ -32,22 +35,23 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const validateToken = async (token: string) => {
-  const _token = token.replace(/^Bearer\s/, "");
+  console.log("middleware token", token)
+  // const _token = token.replace(/^Bearer\s/, "");
+
   try {
     const decoded = (await jwt.verify(
-      _token,
+      token,
       process.env.API_AUTH_SECRET!
     )) as IUser;
-    const result = await redisClient.sIsMember(
-      `user_tokens:${decoded.id}`,
-      _token
+    const result = await redisClient.hExists(
+      `user_tokens:${decoded.id}`, token
     );
+    console.log("RESULT",result)
     if (result) {
       return decoded;
     }
     return null;
   } catch (error) {
-    console.error("Error validating token:", error);
     return null;
   }
 };

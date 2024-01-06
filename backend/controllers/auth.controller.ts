@@ -38,7 +38,14 @@ const register = async (req: Request, res: Response) => {
         password: bcrypt.hashSync(password, 8),
       },
     });
-    res.status(201).send(user);
+
+    let { token, refreshToken } = await generateTokens(user);
+    res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV==='production' });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV==='production' });
+    
+    res
+      .status(201)
+      .send({ ...user, accessToken: token, refreshToken});
   } catch (error) {
     throw new InternalServerError("Unable to process user register request");
   }
@@ -64,12 +71,12 @@ const login = async (req: Request, res: Response) => {
     const { password, ...userWithoutPassword } = user;
     const usr: IUser = userWithoutPassword;
     let { token, refreshToken } = await generateTokens(usr);
+    res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV==='production' });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV==='production' });
     res.status(200).send({
       id: user.id,
       username: user.username,
-      email: user.email,
-      accessToken: token,
-      refreshToken: refreshToken,
+      email: user.email
     });
   } catch (error) {
     throw new InternalServerError("Unable to process user login request");
@@ -78,7 +85,7 @@ const login = async (req: Request, res: Response) => {
 
 const refreshToken = async (req: Request, res: Response) => {
   console.log("Refresh token is called");
-  const refToken = req.body.token;
+  const refToken = req.cookies.refreshToken;
 
   if (!refToken) throw new NotAuthorizedError();
   try {
@@ -96,7 +103,7 @@ const refreshToken = async (req: Request, res: Response) => {
 
 // Get User
 const user = async (req: Request, res: Response) => {
-  var token = req.headers.authorization;
+  let token =req.cookies?.token
   if (token) {
     try {
       const decoded = await jwt.verify(
@@ -114,15 +121,16 @@ const user = async (req: Request, res: Response) => {
 };
 
 const logout = async (req: Request, res: Response) => {
-  const token = req.headers.authorization;
+  let token = req.cookies.token;
+  let refreshToken = req.cookies.refreshToken;
+ 
   if (!token) {
     throw new NotAuthorizedError();
   }
+
   try {
-    await redisClient.sRem(
-      `user_tokens:${req.currentUser?.id}`,
-      token.replace(/^Bearer\s/, "")
-    );
+     console.log("user",req.currentUser)
+    await redisClient.hDel(`user_tokens:${req.currentUser?.id}`,  token);
     res.status(200).send({});
   } catch (error) {
     throw new InternalServerError("Unable to logout user properly");
@@ -134,14 +142,15 @@ const generateTokens = async (user: IUser) => {
     { id: user.id, email: user.email, username: user.username },
     process.env.API_AUTH_SECRET!,
     {
-      expiresIn: 86400, // 24 hours
+     // expiresIn: 86400, // 24 hours
+     expiresIn: 300, //5 minutes for testing purposes
     }
   );
   const refreshToken = jwt.sign(
     { id: user.id, email: user.email, username: user.username },
     process.env.REFRESH_TOKEN_SECRET!
   );
-  await redisClient.sAdd(`user_tokens:${user.id}`, token);
+  await redisClient.hSet(`user_tokens:${user.id}`, token, refreshToken);
   return { token, refreshToken };
 };
 

@@ -6,6 +6,7 @@ import { Server } from "http";
 import { RedisClient } from "../config/redis";
 import { getMainRoomMessages } from "../controllers/message.controller";
 import { validateToken } from "../middleware/auth.middleware";
+import cookie from "cookie";
 
 export const startChatServices = async (
   http: Server,
@@ -25,12 +26,14 @@ export const startChatServices = async (
 
   io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
+    console.log("Socket", cookie.parse(socket.request.headers.cookie || ''))
+    // const token=socket.request.headers.cookie?.token
     if (!token) {
-      return next(new Error("invalid token"));
+       return next(new Error("invalid token"));
     }
     const decoded = await validateToken(token);
     if (decoded === null) {
-      return next(new Error("invalid token"));
+       return next(new Error("invalid token"));
     }
     socket.data.user = decoded;
     next();
