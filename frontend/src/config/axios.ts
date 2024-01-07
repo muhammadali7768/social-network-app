@@ -1,37 +1,74 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import {jwtDecode} from 'jwt-decode';
 import NavigateService from '../services/navigate';
-import StorageService from '../services/storage';
 import useUserStore from '@/hooks/useUserStore';
+import Cookies from 'js-cookie';
 import { API_URL } from '.';
 
 const request = axios.create({
   baseURL: API_URL,
   timeout: 60000,
+  withCredentials: true,
 });
 
 const refreshRequest = axios.create({
   baseURL: API_URL,
+  withCredentials:true
 });
 
-request.interceptors.request.use(
-  (requestConfig: any) => {
-    const { token } = StorageService.getAuthData();
+request.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    console.log("Axios Error",error.response)
 
-    if (token && token !== null && token !== '' && token !=="undefined" && token !==undefined) {
-      console.log("token :",token)
-      if (!isExpiredToken(token)) {
-        requestConfig.headers.Authorization = `Bearer ${token}`;
-      } else {
-        return resetTokenAndReattemptRequest(requestConfig);
+    // If the error status is 401 and there is no originalRequest._retry flag,
+    // it means the token has expired and we need to refresh it
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const response=await getNewTokenByRefreshToken();
+        // const refreshToken = localStorage.getItem('refreshToken');
+        // const response = await axios.post('/api/refresh-token', { refreshToken });
+        // const { token } = response.data;
+
+        // localStorage.setItem('token', token);
+
+        // Retry the original request with the new token
+        // originalRequest.headers.Authorization = `Bearer ${token}`;
+        if (response.status != 201) {
+          return Promise.reject(response);
+        }
+        return axios(originalRequest);
+      } catch (error) {
+        // Handle refresh token error or redirect to login
       }
     }
-    return requestConfig;
-  },
-  (error) => {
+
     return Promise.reject(error);
-  },
+  }
 );
+
+// request.interceptors.request.use(
+//   (requestConfig: any) => {
+//     const token  =  Cookies.get('token');
+
+//     if (token && token !== null && token !== '' && token !=="undefined" && token !==undefined) {
+//       console.log("token :",token)
+//       if (!isExpiredToken(token)) {
+//         //TODO: if the token is not expired 
+//         requestConfig.headers.Authorization = `Bearer ${token}`;
+//       } else {
+//         return resetTokenAndReattemptRequest(requestConfig);
+//       }
+//     }
+//     return requestConfig;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   },
+// );
 
 const isExpiredToken = (token: string = '') => {
   try {
@@ -55,7 +92,8 @@ const resetTokenAndReattemptRequest = async (
   requestType: 'req' | 'res' = 'req',
 ): Promise<AxiosRequestConfig> => {
   console.log('--- WARNING: JWT Timeout - Refreshing! ---');
-  const { refreshToken: resetToken = '' } = StorageService.getAuthData();
+ // const { refreshToken: resetToken = null } =  useUserStore.getState()?.user;
+  const resetToken=useUserStore.getState().user?.refreshToken;
   try {
     if (!resetToken) {
       const reason = `Couldn't find refresh token!`;
@@ -69,16 +107,16 @@ const resetTokenAndReattemptRequest = async (
       make the request. Update the value to the check so that no
       other call can be made concurrently.*/
       isAlreadyFetchingAccessToken = true;
-      const response = await refreshRequest.post(`auth/refresh_token`, {
-        token: resetToken,
-      });
+      // const response = await refreshRequest.post(`auth/refresh_token`, {
+      //   token: resetToken,
+      // });
+      const response=await getNewTokenByRefreshToken()
 
       if (!response.data) {
         return Promise.reject(response);
       }
       const { token, refreshToken } = response.data;
-      StorageService.setAuthData(token, refreshToken);
-     useUserStore.getState().updateUserToken(token)
+     useUserStore.getState().updateUserTokens(token, refreshToken)
       isAlreadyFetchingAccessToken = false;
       onAccessTokenFetched(token);
     }
@@ -87,11 +125,16 @@ const resetTokenAndReattemptRequest = async (
   } catch (err) {
     // make sure we don't lock any upcoming request in case of a refresh error
     isAlreadyFetchingAccessToken = false;
-    StorageService.clearUserData();
+    useUserStore.getState().clearUserStore();
     NavigateService.navigate('/');
     return Promise.reject(err);
   }
 };
+
+const getNewTokenByRefreshToken=async()=>{
+  const response = await refreshRequest.get(`auth/refresh_token`);
+  return response;
+}
 
 const requestResolverBuilder = (type: 'req' | 'res') => (requestConfig: any) => (resolve: any) => {
   /* We need to add the request retry to the queue
@@ -111,4 +154,4 @@ const onAccessTokenFetched = (authToken: string) => {
 
 const addSubscriber = (cb: (authToken: string) => void) => subscribers.push(cb);
 
-export { request };
+export { request, getNewTokenByRefreshToken };
