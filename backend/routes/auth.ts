@@ -33,7 +33,7 @@ authRouter.post("/login", [
   .withMessage("You must provide a password")
 ],
 validateRequest, login);
-authRouter.post("/refresh_token", refreshToken);
+authRouter.get("/refresh_token", refreshToken);
 authRouter.get("/current-user", verifyToken, user);
 authRouter.get("/logout", verifyToken, logout);
 

@@ -5,6 +5,7 @@ import { IUser } from "../interfaces/user.interface";
 import { NotAuthorizedError } from "../errors/not-authorized.error";
 import { BadRequestError } from "../errors/bad-request.error";
 const redisClient = RedisClient.getInstance().getRedisClient();
+import cookie from "cookie";
 
 declare global {
   namespace Express {
@@ -14,15 +15,17 @@ declare global {
   }
 }
 const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
+  
   console.log("Middleware Token",req.cookies.token)
   //  let token = req.headers.authorization;
   if (!req.cookies?.token) {
     throw new NotAuthorizedError();
   }
-  let token = req.cookies?.token;
+  let token = req.cookies?.token ;
 
   try {
     const decoded = await validateToken(token);
+    console.log("Decoded before", decoded)
     if (decoded === null) {
       throw new NotAuthorizedError();
     }
@@ -30,14 +33,12 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
     console.log("Decoded", decoded)
     next();
   } catch (error) {
-    throw new BadRequestError("Unable to validate the user provided token");
+    throw new NotAuthorizedError();
   }
 };
 
 const validateToken = async (token: string) => {
-  console.log("middleware token", token)
-  // const _token = token.replace(/^Bearer\s/, "");
-
+ 
   try {
     const decoded = (await jwt.verify(
       token,

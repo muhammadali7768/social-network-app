@@ -86,6 +86,7 @@ const login = async (req: Request, res: Response) => {
 const refreshToken = async (req: Request, res: Response) => {
   console.log("Refresh token is called");
   const refToken = req.cookies.refreshToken;
+  const oldToken=req.cookies.token;
 
   if (!refToken) throw new NotAuthorizedError();
   try {
@@ -94,7 +95,13 @@ const refreshToken = async (req: Request, res: Response) => {
       process.env.REFRESH_TOKEN_SECRET!
     )) as IUser;
     let { token, refreshToken } = await generateTokens(user);
-    res.status(201).send({ token, refreshToken });
+    //Delete old tokens for which we have refreshed the tokens
+    await redisClient.hDel(`user_tokens:${user.id}`,  oldToken);
+
+    res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV==='production' });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV==='production' });
+   
+    res.status(201).send({});
   } catch (err) {
     console.log("Refresh token verification error");
     throw new NotAuthorizedError();

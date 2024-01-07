@@ -25,13 +25,14 @@ export const startChatServices = async (
  
 
   io.use(async (socket, next) => {
-    const token = socket.handshake.auth.token;
+    const tokens = cookie.parse(socket.request.headers.cookie || '');
     console.log("Socket", cookie.parse(socket.request.headers.cookie || ''))
     // const token=socket.request.headers.cookie?.token
-    if (!token) {
+    if (!tokens?.token) {
        return next(new Error("invalid token"));
     }
-    const decoded = await validateToken(token);
+    const decoded = await validateToken(tokens.token);
+    console.log("socket decoded user",decoded)
     if (decoded === null) {
        return next(new Error("invalid token"));
     }
