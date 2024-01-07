@@ -18,7 +18,7 @@ let socket: Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export const initSocket = () => {
   if (!socket) {
-    socket = io(process.env.NEXT_PUBLIC_SOCKET_API!, { autoConnect: false , transports: ['websocket'], upgrade: false});
+    socket = io(process.env.NEXT_PUBLIC_SOCKET_API!, { withCredentials:true, autoConnect: false , transports: ['websocket'], upgrade: false});
   }
   return socket;
 };
