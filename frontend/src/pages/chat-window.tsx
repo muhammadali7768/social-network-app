@@ -10,6 +10,8 @@ import { IListUser } from "@/interfaces/auth.interfaces";
 import { initSocket } from "@/config/socketio";
 import { IMessage } from "@/interfaces/message.interface";
 import MainChatItem from "@/components/chat/MainChatItem";
+import Cookies from 'js-cookie';
+import { getNewTokenByRefreshToken } from "@/config/axios";
 export default function ChatWindow() {
   const usersList = useUserStore((state) => state.usersList);
   const setUsersList = useUserStore((state) => state.setUsersList);
@@ -50,7 +52,7 @@ export default function ChatWindow() {
 
   useEffect(() => {
     console.log("Connecting to socket", user);
-    socket.auth = { token: user?.accessToken };
+    socket.auth = { token: Cookies.get("token") };
     socket.connect();
     socket.on("connect", () => {
       console.log("Connected to Socket.IO");
@@ -58,9 +60,10 @@ export default function ChatWindow() {
       console.log("Socket ID", socket.id);
     });
     socket.on("connect_error", (err) => {
-      if (err.message === "invalid token") {
-        alert("Connection Error while connecting to chat");
-      }
+      console.log("Socket Connection Error",)
+       if (err.message === "invalid token") {
+       getNewTokenByRefreshToken()
+       }
     });
 
     return () => {
