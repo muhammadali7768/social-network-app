@@ -56,6 +56,7 @@ export const startChatServices = async (
       const onlineUsers = await redisClient.getOnlineUsers("online_users");
       socket.emit("users", onlineUsers);
       const messages = await getMainRoomMessages();
+      console.log("messages", messages.length)
       socket.emit("messageHistory", messages);
     });
 

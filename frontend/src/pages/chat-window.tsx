@@ -109,8 +109,10 @@ export default function ChatWindow() {
   );
   useEffect(() => {
     const setMessageHistory = (messageHistory: IMessage[]) => {
+      console.log("Message History got")
       if (messageHistory) {
         setMainChatMessages(messageHistory);
+        setActiveChatMessages(messageHistory)
       }
     };
 
@@ -121,7 +123,7 @@ export default function ChatWindow() {
     return () => {
       socket.off("message", setChatMessages);
     };
-  }, [socket, setMainChatMessages, setChatMessages]);
+  }, [socket, setMainChatMessages, setChatMessages, setActiveChatMessages]);
 
   useEffect(() => {
     socket.on("userConnected", (user: IListUser) => {
