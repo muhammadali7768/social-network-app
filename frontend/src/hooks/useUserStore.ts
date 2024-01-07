@@ -5,13 +5,13 @@ import { persist } from "zustand/middleware";
 import { IMessage } from "@/interfaces/message.interface";
 type UserWithoutPassword = Pick<
   IUser,
-  "id" | "username" | "email" | "accessToken"
+  "id" | "username" | "email" | "accessToken" | "refreshToken"
 >;
 interface UserStore {
   user: UserWithoutPassword | null;
   usersList: IListUser[];
   setUser: (newUser: UserWithoutPassword) => void;
-  updateUserToken: (token: string) => void;
+  updateUserTokens: (token: string, refToken:string) => void;
   setUsersList: (newList: IListUser[]) => void;
   updateUserMessages:(userId:number, newMessage:IMessage)=>void
   clearUserStore: () => void;
@@ -25,13 +25,14 @@ const useUserStore = create<UserStore>()(
       setUser: (newUser) => {
         set({ user: newUser });
       },
-      updateUserToken: (token: string) => {
+      updateUserTokens: (accessToken: string, refreshToken:string) => {
         const oldUser = get().user;
         if (oldUser?.email && oldUser?.id && oldUser.username) {
           set({
             user: {
               ...oldUser,
-              accessToken: token,
+              accessToken: accessToken,
+              refreshToken: refreshToken
             },
           });
         }

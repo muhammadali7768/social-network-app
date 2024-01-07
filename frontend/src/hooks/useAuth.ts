@@ -2,7 +2,6 @@ import { useState } from "react";
 import cookie from "js-cookie";
 import { toast } from "react-toastify";
 import { useRouter } from "next/router";
-import StorageService from "@/services/storage";
 import { request } from "@/config/axios";
 import { IFortgotPasswordFormData, ILoginFormData, IRegisterFormData, IResetPasswordFormData } from "@/interfaces/auth.interfaces";
 import useUserStore from "@/hooks/useUserStore";
@@ -11,7 +10,6 @@ import useUserStore from "@/hooks/useUserStore";
 export const useAuth = () => {
   const setUser= useUserStore(state=>state.setUser)
   const clearUserStore=useUserStore(state=>state.clearUserStore)
-  //const { setUser, clearUserStore } = useUserStore();
   const { push } = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -22,10 +20,7 @@ export const useAuth = () => {
       const { data } = await request.post("auth/login", postData);
       setLoading(false);
       if (data.email) {
-        StorageService.setAuthData(data.accessToken, data.refreshToken);
-        StorageService.setUserData(data)
         setUser(data)
-        cookie.set("token", data.accessToken, { expires: 1 / 24 });
         push('/chat-window')
       }
     } catch (err: any) {
@@ -45,10 +40,7 @@ export const useAuth = () => {
       const { data } = await request.post("auth/register", postData);
       setLoading(false);
       if (data.id) {
-        
-        StorageService.setUserData(data);
         setUser(data);
-       // push("/auth/verify-email");
       }
     } catch (err: any) {
       setLoading(false);
@@ -65,13 +57,11 @@ export const useAuth = () => {
       const { data } = await request.get("auth/current-user");
       setLoading(false);    
       if (data.id) {   
-        StorageService.setUserData(data)
         setUser(data)
       }
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      StorageService.clearUserData()
       clearUserStore()
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
@@ -88,7 +78,7 @@ export const useAuth = () => {
       });
       setLoading(false);
       if (data.id) {
-        // push('/welcome')
+    //TODO: redirect to email confirmation page
       }
     } catch (err: any) {
       setLoading(false);
@@ -116,10 +106,10 @@ export const useAuth = () => {
     }
   }
 
-  const resetPassword = async ({ password, token }: IResetPasswordFormData) => {
+  const resetPassword = async ({ password }: IResetPasswordFormData) => {
     try {
       setLoading(true);
-      const { status } = await request.post(`reset_password`, { password, token });
+      const { status } = await request.post(`reset_password`, { password });
       setLoading(false);
       if (status === 200) {
         push("/auth/login");
@@ -138,10 +128,9 @@ export const useAuth = () => {
       setLoading(true);
       const res = await request.get("auth/logout");
       setLoading(false);
-      clearUserStore();
       if (res.status===200) {
-        StorageService.clearUserData();
         clearUserStore();
+        cookie.remove("token", { path: '/' });
         push('/')
       }
     } catch (err: any) {
