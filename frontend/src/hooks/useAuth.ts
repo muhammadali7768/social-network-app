@@ -3,16 +3,19 @@ import cookie from "js-cookie";
 import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 import { request } from "@/config/axios";
-import { IFortgotPasswordFormData, ILoginFormData, IRegisterFormData, IResetPasswordFormData } from "@/interfaces/auth.interfaces";
+import {
+  IFortgotPasswordFormData,
+  ILoginFormData,
+  IRegisterFormData,
+  IResetPasswordFormData,
+} from "@/interfaces/auth.interfaces";
 import useUserStore from "@/hooks/useUserStore";
 
-
 export const useAuth = () => {
-  const setUser= useUserStore(state=>state.setUser)
-  const clearUserStore=useUserStore(state=>state.clearUserStore)
+  const setUser = useUserStore((state) => state.setUser);
+  const clearUserStore = useUserStore((state) => state.clearUserStore);
   const { push } = useRouter();
   const [loading, setLoading] = useState(false);
-
 
   const login = async (postData: ILoginFormData) => {
     try {
@@ -20,19 +23,19 @@ export const useAuth = () => {
       const { data } = await request.post("auth/login", postData);
       setLoading(false);
       if (data.email) {
-        setUser(data)
-        push('/chat-window')
+        setUser(data);
+        push("/chat-window");
       }
     } catch (err: any) {
       setLoading(false);
-      console.log(err);
+
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
-      if (err.response?.data?.error === "EmailNotVerified") push("/auth/verify-email")
+      if (err.response?.data?.error === "EmailNotVerified")
+        push("/auth/verify-email");
     }
   };
-  
 
   const register = async (postData: IRegisterFormData) => {
     try {
@@ -44,7 +47,7 @@ export const useAuth = () => {
       }
     } catch (err: any) {
       setLoading(false);
-      console.log(err);
+
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
@@ -55,14 +58,14 @@ export const useAuth = () => {
     try {
       setLoading(true);
       const { data } = await request.get("auth/current-user");
-      setLoading(false);    
-      if (data.id) {   
-        setUser(data)
+      setLoading(false);
+      if (data.id) {
+        setUser(data);
       }
     } catch (err: any) {
       setLoading(false);
-      console.log(err);
-      clearUserStore()
+
+      clearUserStore();
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
@@ -70,7 +73,6 @@ export const useAuth = () => {
   };
 
   const sendEmailVerification = async (email: string) => {
-    
     try {
       setLoading(true);
       const { data } = await request.post("send_email_verification", {
@@ -78,33 +80,38 @@ export const useAuth = () => {
       });
       setLoading(false);
       if (data.id) {
-    //TODO: redirect to email confirmation page
+        //TODO: redirect to email confirmation page
       }
     } catch (err: any) {
       setLoading(false);
-      console.log(err);
+
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
   };
 
-  const sendEmailForForgotPassword = async ({ email }: IFortgotPasswordFormData) => {
+  const sendEmailForForgotPassword = async ({
+    email,
+  }: IFortgotPasswordFormData) => {
     try {
       setLoading(true);
       const { status } = await request.post(`forgot_password`, { email });
       setLoading(false);
       if (status === 200) {
-        toast.success("We've sent you the reset instructions, please check it.", { position: toast.POSITION.TOP_RIGHT, });
+        toast.success(
+          "We've sent you the reset instructions, please check it.",
+          { position: toast.POSITION.TOP_RIGHT }
+        );
       }
     } catch (err: any) {
       setLoading(false);
-      console.log(err);
+
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
-  }
+  };
 
   const resetPassword = async ({ password }: IResetPasswordFormData) => {
     try {
@@ -116,22 +123,22 @@ export const useAuth = () => {
       }
     } catch (err: any) {
       setLoading(false);
-      console.log(err);
+
       toast.error(err.response?.data.message, {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
-  }
+  };
 
   const logout = async () => {
     try {
       setLoading(true);
       const res = await request.get("auth/logout");
       setLoading(false);
-      if (res.status===200) {
+      if (res.status === 200) {
         clearUserStore();
-        cookie.remove("token", { path: '/' });
-        push('/')
+        cookie.remove("token", { path: "/" });
+        push("/");
       }
     } catch (err: any) {
       setLoading(false);
@@ -141,7 +148,14 @@ export const useAuth = () => {
     }
   };
 
-  return { login, register, sendEmailVerification, sendEmailForForgotPassword, resetPassword, getUser, logout, loading };
+  return {
+    login,
+    register,
+    sendEmailVerification,
+    sendEmailForForgotPassword,
+    resetPassword,
+    getUser,
+    logout,
+    loading,
+  };
 };
-
-
