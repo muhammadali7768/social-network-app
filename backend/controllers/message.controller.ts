@@ -1,14 +1,15 @@
 import prisma from "../config/db";
 import { IMessage } from "../interfaces/message.interface";
 
-const saveMessage = (messageData:IMessage) => {
-    prisma.mainRoomMessage.create({
+const saveMessage = async(messageData:IMessage) => {
+    return await prisma.mainRoomMessage.create({
         data: {
           message: messageData.message,
           senderId: messageData.senderId
         }
       }).then((msg) => {
         console.log("Message Saved to DB:", msg);
+        return msg.id
       })  
 };
 
@@ -28,8 +29,8 @@ const getPrivateMessages=(senderId:number,recipientId:number)=>{
         return messages
     })
 }
-const savePrivateMessage=(messageData:IMessage)=>{
-    prisma.privateMessage.create({
+const savePrivateMessage=async(messageData:IMessage)=>{
+   return await prisma.privateMessage.create({
         data: {
           message: messageData.message,
           senderId: messageData.senderId,
@@ -37,6 +38,7 @@ const savePrivateMessage=(messageData:IMessage)=>{
         }
       }).then((msg) => {
         console.log("Private message saved to DB:", msg);
+        return msg.id
       }) 
 }
 export { saveMessage, getMainRoomMessages, getPrivateMessages, savePrivateMessage };

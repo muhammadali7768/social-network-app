@@ -1,47 +1,66 @@
-import { Kafka, Message, Producer, ProducerBatch, TopicMessages } from 'kafkajs'
+import {
+  Kafka,
+  Message,
+  Producer,
+  ProducerBatch,
+  TopicMessages,
+} from "kafkajs";
 import { kafka } from "../config/kafka.client";
-import { IMessage } from '../interfaces/message.interface';
+import { IMessage } from "../interfaces/message.interface";
 
 export class ChatProducer {
-  private producer: Producer
+  private producer: Producer;
 
   constructor() {
-    this.producer = this.createProducer()
+    this.producer = this.createProducer();
   }
 
   public async start(): Promise<void> {
     try {
-      await this.producer.connect()
+      await this.producer.connect();
     } catch (error) {
-      console.log('Error connecting the producer: ', error)
+      console.log("Error connecting the producer: ", error);
     }
   }
 
   public async stop(): Promise<void> {
-    await this.producer.disconnect()
+    await this.producer.disconnect();
   }
 
-  async  sendMessage(message: IMessage) {
-    console.log(`Producer sent message: ${message} to topic: ${message.room}`);
-    if(message?.recipientId && message.recipientId ===0){
+  async sendMainChatMessage(message: IMessage) {
     await this.producer.send({
       topic: message.room,
       messages: [
-        { value: JSON.stringify({ message: message.message, senderId: message.senderId }), timestamp: Date.now().toString(), partition: 0 },
+        {
+          value: JSON.stringify({
+            message: message.message,
+            senderId: message.senderId,
+          }),
+          timestamp: Date.now().toString(),
+          partition: 0,
+        },
       ],
     });
-  }else if (message?.recipientId && message.recipientId >0){
+  }
+
+  async sendPrivateMessage(message: IMessage) {
     await this.producer.send({
       topic: message.room,
       messages: [
-        { value: JSON.stringify({ message: message.message, senderId: message.senderId, recipientId: message.recipientId }), timestamp: Date.now().toString(), partition: 0 },
+        {
+          value: JSON.stringify({
+            message: message.message,
+            senderId: message.senderId,
+            recipientId: message.recipientId,
+          }),
+          timestamp: Date.now().toString(),
+          partition: 0,
+        },
       ],
     });
   }
-  }
- 
 
-  private createProducer() : Producer {
-     return kafka.producer()
+  private createProducer(): Producer {
+    return kafka.producer();
   }
 }

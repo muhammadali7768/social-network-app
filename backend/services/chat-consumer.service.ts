@@ -1,8 +1,6 @@
-import prisma from "../config/db";
 import {
   Consumer,
   ConsumerSubscribeTopics,
-  Kafka,
   EachMessagePayload,
   EachBatchPayload,
 } from "kafkajs";
@@ -10,16 +8,21 @@ import { Server } from "socket.io";
 // import { SocketIO } from "../config/socketio";
 import { kafka } from "../config/kafka.client";
 import { IMessage } from "../interfaces/message.interface";
-import { saveMessage, savePrivateMessage} from "../controllers/message.controller";
+import { RedisClient } from "../config/redis";
+import {generatePrivateChatRoomName} from "../utils/room-names";
+import {
+  saveMessage,
+  savePrivateMessage,
+} from "../controllers/message.controller";
 export class ChatConsumer {
   private kafkaConsumer: Consumer;
-  private subscribedTopic: string;
-  private socket:Server
+  private subscribedTopic: string[];
+  private socket: Server;
 
-  public constructor(io:Server) {
+  public constructor(io: Server) {
     this.kafkaConsumer = this.createKafkaConsumer();
-    this.subscribedTopic = "";
-    this.socket=io;
+    this.subscribedTopic = [];
+    this.socket = io;
   }
 
   public async subscribeToTopic(topicName: string) {
@@ -28,11 +31,11 @@ export class ChatConsumer {
       fromBeginning: true,
     };
 
-    if (this.subscribedTopic != topicName) {
+    if (!this.subscribedTopic.includes(topicName)) {
       await this.kafkaConsumer.subscribe(topic);
-      console.log("already subscribed")
+      console.log("already subscribed");
     }
-    this.subscribedTopic = topicName;
+    this.subscribedTopic.push(topicName);
     await this.kafkaConsumer.run({
       eachMessage: async (messagePayload: EachMessagePayload) => {
         const { topic, partition, message } = messagePayload;
@@ -40,22 +43,41 @@ export class ChatConsumer {
         console.log(`- ${prefix} ${message.key}#${message.value}`);
         if (message.value) {
           const stringValue = message.value.toString("utf8") ?? "";
-         const messageData:IMessage = JSON.parse(stringValue)
-          
-          if(messageData.recipientId && messageData.recipientId===0){
-            this.socket.emit('message', {...messageData, id:message.offset})
-           saveMessage(messageData) 
-          }else if(messageData.recipientId && messageData.recipientId >0){
-            let recipientId= messageData.recipientId.toString()
-            let senderId=messageData.senderId.toString()
-            this.socket.to(recipientId).to(senderId).emit('message', {...messageData, id:message.offset})
-            savePrivateMessage(messageData)
-          }       
+          const messageData: IMessage = JSON.parse(stringValue);
+
+          if (topic === "chat") {
+            await this.storeAndEmitMainChatMessage(messageData);
+          } else if (topic === "private_chat") {
+            await this.storeAndEmitPrivateMessage(messageData);
+          }
         }
-       
       },
     });
+  }
 
+  public async storeAndEmitMainChatMessage(messageData: IMessage) {
+    let msgId = await saveMessage(messageData);
+    this.socket.emit("message", { ...messageData, id: msgId });
+    console.log("MSGID", msgId);
+    RedisClient.getInstance()
+      .getRedisClient()
+      .rPush(`main_chat_messages`, JSON.stringify(messageData));
+  }
+
+  public async storeAndEmitPrivateMessage(messageData: IMessage) {
+    let recipientId = messageData.recipientId!.toString();
+    let senderId = messageData.senderId.toString();
+
+    let msgId = await savePrivateMessage(messageData);
+
+    this.socket
+      .to(recipientId)
+      .to(senderId)
+      .emit("message", { ...messageData, id: msgId });
+    const roomName = generatePrivateChatRoomName(messageData.senderId, messageData.recipientId!);
+    RedisClient.getInstance()
+      .getRedisClient()
+      .rPush(roomName, JSON.stringify(messageData));
   }
   public async startConsumer(): Promise<void> {
     try {
@@ -78,49 +100,7 @@ export class ChatConsumer {
       },
     });
   }
-  public async getChatMessages(topic: string, partition: number, offset: string) {
-    // let messages: {}[] = [];
-    try {
-      //   this.kafkaConsumer.run({
-      //     autoCommit: false,
-      //     eachMessage: async ({ topic, message }) =>  Promise.resolve()
-      // })
-      //   await this.kafkaConsumer.seek({
-      //     topic,
-      //     partition: partition,
-      //     offset: offset,
-      //   });
-      const messages: {}[] = []
-      await this.kafkaConsumer
-        .run({
-          // eachMessage: async ({ topic, partition, message }) => {
-          //   if(message.value){
-          //   const stringValue = message.value.toString('utf8') ?? '';
-          //   console.log("consumer message", stringValue)
-          //   messages.push(JSON.parse(stringValue));
-          //   }
-          // },
-          eachBatch: async (eachBatchPayload: EachBatchPayload) => {
-            const { batch } = eachBatchPayload;
-            for (const message of batch.messages) {
-              const prefix = `${batch.topic}[${batch.partition} | ${message.offset}] / ${message.timestamp}`;
-              console.log(`- ${prefix} ${message.key}#${message.value}`);
-              if (message.value) {
-                const stringValue = message.value.toString("utf8") ?? "";
-                //   console.log("consumer message", stringValue)
-                messages.push(JSON.parse(stringValue));                
-              }
-            }
-          },
-        })
-  
-      return { messages: messages };
-    } catch (error) {
-      console.log("Error while getting kafka messages", error);
-    }
-  }
 
- 
   public async shutdown(): Promise<void> {
     await this.kafkaConsumer.disconnect();
   }
