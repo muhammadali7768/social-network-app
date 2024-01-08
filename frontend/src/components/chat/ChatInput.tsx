@@ -12,13 +12,15 @@ const ChatInput = ({ index }: { index: number }) => {
   const sendMessage = () => {
     console.log("User", user);
     if (message.trim() !== "") {
+      console.log("message is not empty")
       const msgObj: IMessage = {
         message: message,
         senderId: user!.id,
         room: chatRoom,
         recipientId: index //We will discard the recipientId for main chat and will use it for PM
       };
-      socket.emit("chatMessage", msgObj);
+      if(index===0) socket.emit("mainChatMessage", msgObj);
+      else socket.emit("privateChatMessage", msgObj)
       setMessage("");
     }
   };

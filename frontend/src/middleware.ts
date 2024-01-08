@@ -14,6 +14,7 @@ export const config = {
   if (publicPaths.some((prefix) => pathname==="/")) {
     return NextResponse.next()
   } else if(!req.cookies.has("token")) {
+    console.log("No token")
     return NextResponse.redirect(`${req.nextUrl.origin}/`)
   }
  }

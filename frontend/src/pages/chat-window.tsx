@@ -10,7 +10,7 @@ import { IListUser } from "@/interfaces/auth.interfaces";
 import { initSocket } from "@/config/socketio";
 import { IMessage } from "@/interfaces/message.interface";
 import MainChatItem from "@/components/chat/MainChatItem";
-import Cookies from 'js-cookie';
+import NavigateService from "@/services/navigate";
 import { getNewTokenByRefreshToken } from "@/config/axios";
 export default function ChatWindow() {
   const usersList = useUserStore((state) => state.usersList);
@@ -52,18 +52,27 @@ export default function ChatWindow() {
 
   useEffect(() => {
     console.log("Connecting to socket", user);
-    socket.auth = { token: Cookies.get("token") };
     socket.connect();
     socket.on("connect", () => {
       console.log("Connected to Socket.IO");
       socket.emit("subscribe", "chat");
       console.log("Socket ID", socket.id);
     });
-    socket.on("connect_error", (err) => {
-      console.log("Socket Connection Error",)
-       if (err.message === "invalid token") {
-       getNewTokenByRefreshToken()
-       }
+
+    socket.on("connect_error", async (err) => {
+      console.log("Socket Connection Error");
+      if (err.message === "invalid token") {
+        const response = await getNewTokenByRefreshToken();
+        // console.log("RefreshTokens", response);
+        if (response.status === 201) {
+          setTimeout(() => {
+            console.log("RECONNECTING>>>>>>")
+            socket.connect();
+          }, 1000);
+        } //else  if(response.status===401){
+        //   NavigateService.navigate("/")
+        // }
+      }
     });
 
     return () => {
@@ -96,7 +105,7 @@ export default function ChatWindow() {
           (usr) => usr.id === msgConcernedUserId
         );
         if (msgUser) updateUserMessages(msgUser.id, message);
-      } 
+      }
       updateActiveChatMessages(message);
     },
     [
@@ -109,10 +118,10 @@ export default function ChatWindow() {
   );
   useEffect(() => {
     const setMessageHistory = (messageHistory: IMessage[]) => {
-      console.log("Message History got")
+      console.log("Message History got");
       if (messageHistory) {
         setMainChatMessages(messageHistory);
-        setActiveChatMessages(messageHistory)
+        setActiveChatMessages(messageHistory);
       }
     };
 

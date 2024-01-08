@@ -12,7 +12,8 @@ interface ServerToClientEvents {
 
 interface ClientToServerEvents {
   subscribe: (roomName: string) => void;
-  chatMessage: (message:IMessage)=>void
+  mainChatMessage: (message:IMessage)=>void
+  privateChatMessage: (message:IMessage)=>void
 }
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>;
 
