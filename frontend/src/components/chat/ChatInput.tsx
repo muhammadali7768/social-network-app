@@ -12,15 +12,15 @@ const ChatInput = ({ index }: { index: number }) => {
   const sendMessage = () => {
     console.log("User", user);
     if (message.trim() !== "") {
-      console.log("message is not empty")
+      console.log("message is not empty");
       const msgObj: IMessage = {
         message: message,
         senderId: user!.id,
         room: chatRoom,
-        recipientId: index //We will discard the recipientId for main chat and will use it for PM
+        recipientId: index, //We will discard the recipientId for main chat and will use it for PM
       };
-      if(index===0) socket.emit("mainChatMessage", msgObj);
-      else socket.emit("privateChatMessage", msgObj)
+      if (index === 0) socket.emit("mainChatMessage", msgObj);
+      else socket.emit("privateChatMessage", msgObj);
       setMessage("");
     }
   };
@@ -32,6 +32,9 @@ const ChatInput = ({ index }: { index: number }) => {
         className="w-full bg-white rounded-full py-2 px-4 outline-none"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") sendMessage();
+        }}
       />
       <button
         className="ml-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full py-2 px-4"
