@@ -10,22 +10,35 @@ interface DefaultEventsMap {
 interface IAuthUser {
   user: IUser
 }
-export class SocketIO {
-  private io: Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, IAuthUser>;
-  constructor(server: HttpServer, redisClient: RedisClient) {
-    console.log("SocketIO constructor");
-    this.io = new Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, IAuthUser>(server, {
-      adapter: createAdapter(redisClient.getRedisClient()),
-      connectionStateRecovery: {},
-      cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"],
-        credentials: true,
-      },
-    });
-  }
 
-  getIO = () => {
+
+export class SocketIO {
+  private static io: Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, IAuthUser>;
+  // constructor(server: HttpServer, redisClient: RedisClient) {
+  //   console.log("SocketIO constructor");
+  //   this.io = new Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, IAuthUser>(server, {
+  //     adapter: createAdapter(redisClient.getRedisClient()),
+  //     connectionStateRecovery: {},
+  //     cors: {
+  //       origin: "http://localhost:3000",
+  //       methods: ["GET", "POST"],
+  //       credentials: true,
+  //     },
+  //   });
+  // }
+ static async initialize (server: HttpServer, redisClient: RedisClient) {
+  console.log("SocketIO constructor");
+  this.io = new Server<DefaultEventsMap,DefaultEventsMap,DefaultEventsMap, IAuthUser>(server, {
+    adapter: createAdapter(redisClient.getRedisClient()),
+    connectionStateRecovery: {},
+    cors: {
+      origin: "http://localhost:3000",
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
+  });
+}
+  static getIO = () => {
     return this.io;
   };
 }

@@ -2,19 +2,27 @@ import {
   Consumer,
   ConsumerSubscribeTopics,
   EachMessagePayload,
-  EachBatchPayload,
 } from "kafkajs";
 import { Server } from "socket.io";
-// import { SocketIO } from "../config/socketio";
+
 import { kafka } from "../config/kafka.client";
 import { IMessage } from "../interfaces/message.interface";
 import { RedisClient } from "../config/redis";
 import {generatePrivateChatRoomName} from "../utils/room-names";
 import {
-  saveMessage,
-  savePrivateMessage,
-} from "../controllers/message.controller";
-export class ChatConsumer {
+  MessageService
+} from "../services/message/pg-message.service";
+import { IObserver } from "../interfaces/observer.interface";
+
+// ISubject/Publisher Interface
+interface ISubject {
+  subscribe(observer: IObserver): void;
+  unsubscribe(observer: IObserver): void;
+  notifySubscribers(message:IMessage, topic:string): void;
+}
+
+export class ChatConsumer implements ISubject{
+  private observers: IObserver[] = [];
   private kafkaConsumer: Consumer;
   private subscribedTopic: string[];
   private socket: Server;
@@ -25,6 +33,15 @@ export class ChatConsumer {
     this.socket = io;
   }
 
+  subscribe(observer: IObserver): void {
+    this.observers.push(observer)
+  }
+  unsubscribe(observer: IObserver): void {
+    this.observers = this.observers.filter((obs) => obs !== observer);
+  }
+  notifySubscribers(message:IMessage, topic:string): void {
+    this.observers.forEach((observer) => observer.update(message, topic));
+  }
   public async subscribeToTopic(topicName: string) {
     const topic: ConsumerSubscribeTopics = {
       topics: [`${topicName}`],
@@ -44,41 +61,41 @@ export class ChatConsumer {
         if (message.value) {
           const stringValue = message.value.toString("utf8") ?? "";
           const messageData: IMessage = JSON.parse(stringValue);
-
-          if (topic === "chat") {
-            await this.storeAndEmitMainChatMessage(messageData);
-          } else if (topic === "private_chat") {
-            await this.storeAndEmitPrivateMessage(messageData);
-          }
+          this.notifySubscribers({...messageData, id: message.offset}, topic)
+          // if (topic === "chat") {
+          //   await this.storeAndEmitMainChatMessage(messageData);
+          // } else if (topic === "private_chat") {
+          //   await this.storeAndEmitPrivateMessage(messageData);
+          // }
         }
       },
     });
   }
 
-  public async storeAndEmitMainChatMessage(messageData: IMessage) {
-    let msgId = await saveMessage(messageData);
-    this.socket.emit("message", { ...messageData, id: msgId });
-    console.log("MSGID", msgId);
-    RedisClient.getInstance()
-      .getRedisClient()
-      .rPush(`main_chat_messages`, JSON.stringify(messageData));
-  }
+  // public async storeAndEmitMainChatMessage(messageData: IMessage) {
+  //   let msgId = await saveMessage(messageData);
+  //   this.socket.emit("message", { ...messageData, id: msgId });
+  //   console.log("MSGID", msgId);
+  //   RedisClient.getInstance()
+  //     .getRedisClient()
+  //     .rPush(`main_chat_messages`, JSON.stringify(messageData));
+  // }
 
-  public async storeAndEmitPrivateMessage(messageData: IMessage) {
-    let recipientId = messageData.recipientId!.toString();
-    let senderId = messageData.senderId.toString();
+  // public async storeAndEmitPrivateMessage(messageData: IMessage) {
+  //   let recipientId = messageData.recipientId!.toString();
+  //   let senderId = messageData.senderId.toString();
 
-    let msgId = await savePrivateMessage(messageData);
+  //   let msgId = await savePrivateMessage(messageData);
 
-    this.socket
-      .to(recipientId)
-      .to(senderId)
-      .emit("message", { ...messageData, id: msgId });
-    const roomName = generatePrivateChatRoomName(messageData.senderId, messageData.recipientId!);
-    RedisClient.getInstance()
-      .getRedisClient()
-      .rPush(roomName, JSON.stringify(messageData));
-  }
+  //   this.socket
+  //     .to(recipientId)
+  //     .to(senderId)
+  //     .emit("message", { ...messageData, id: msgId });
+  //   const roomName = generatePrivateChatRoomName(messageData.senderId, messageData.recipientId!);
+  //   RedisClient.getInstance()
+  //     .getRedisClient()
+  //     .rPush(roomName, JSON.stringify(messageData));
+  // }
   public async startConsumer(): Promise<void> {
     try {
       await this.kafkaConsumer.connect();

@@ -4,19 +4,32 @@ import { createTopics } from "./kafka-admin.service";
 import { SocketIO } from "../config/socketio";
 import { Server } from "http";
 import { RedisClient } from "../config/redis";
-import { getMainRoomMessages } from "../controllers/message.controller";
+import { PgMessageService } from "../services/message/pg-message.service";
 import { validateToken } from "../middleware/auth.middleware";
+import { RedisMessageService } from "./message/redis-message.service";
+import {SocketMessageService} from './message/socket.message.service'
 import cookie from "cookie";
 
+import { RedisUserService } from "./user/redis-user.service";
 export const startChatServices = async (
   http: Server,
   redisClient: RedisClient
 ) => {
-  const io = new SocketIO(http, redisClient).getIO();
+   await SocketIO.initialize(http, redisClient);
+   const io=SocketIO.getIO()
   const chatConsumer = new ChatConsumer(io);
   const chatProducer = new ChatProducer();
   await chatProducer.start();
   await chatConsumer.startConsumer();
+  //creating observers and subscribing for messages 
+  const redisMessageService = new RedisMessageService();
+  chatConsumer.subscribe(redisMessageService);
+  const pgMessageService = new PgMessageService();
+  chatConsumer.subscribe(pgMessageService);
+  const socketMessageService= new SocketMessageService()
+  chatConsumer.subscribe(socketMessageService)
+  const userService = new RedisUserService();
+
   await createTopics();
   // On services start we have to subscribe to both chat and private_chat topics
   ["chat", "private_chat"].forEach(async (topic: string) => {
@@ -38,6 +51,7 @@ export const startChatServices = async (
     socket.data.user = decoded;
     next();
   });
+
   io.on("connection", async (socket) => {
     const count = io.engine.clientsCount;
     console.log("Connected Users", count);
@@ -49,20 +63,21 @@ export const startChatServices = async (
       socket.join(topic);
       //Also join the logedin user socket
       socket.join(user.id.toString());
-      await redisClient.saveUser(user, "online");
-      const onlineUser = await redisClient.findOnlineUser(user.id);
+      await userService.saveUser(user, "online");
+      const onlineUser = await userService.findOnlineUser(user.id);
       socket.to(topic).emit("userConnected", onlineUser);
-      const onlineUsers = await redisClient.getOnlineUsers("online_users");
+      const onlineUsers = await userService.getOnlineUsers("online_users");
       socket.emit("users", onlineUsers);
-      const messages = await getMainRoomMessages();
+      const messages = await pgMessageService.getMainRoomMessages();
       console.log("messages", messages.length);
       socket.emit("messageHistory", messages);
     });
 
     socket.on("mainChatMessage", async (msgObj) => {
-      const { senderId, room, message } = msgObj;
+      const { senderId, room, message, messageClientId } = msgObj;
       console.log("message", message);
       await chatProducer.sendMainChatMessage({
+        messageClientId,
         senderId: senderId,
         room,
         message,
@@ -82,7 +97,7 @@ export const startChatServices = async (
 
     socket.on("disconnect", async () => {
       socket.broadcast.emit("userDisconnected", user.id);
-      await redisClient.saveUser(user, "offline");
+      await userService.saveUser(user, "offline");
       console.log("User disconnected");
     });
   });
