@@ -2,20 +2,31 @@ import React, { useState } from "react";
 import { initSocket } from "@/config/socketio";
 import { IMessage } from "@/interfaces/message.interface";
 import useUserStore from "@/hooks/useUserStore";
+import crypto from 'crypto';
 //index 0 means main chat and when it's greater than 0 then it means user id
 const ChatInput = ({ index }: { index: number }) => {
   const chatRoom = index === 0 ? "chat" : "private_chat";
   const [message, setMessage] = useState("");
   const socket = initSocket();
   const user = useUserStore((state) => state.user);
+  const generateUniqueID=(userId:number)=> {
+    const timestamp=Date.now()
+    const dataToHash = `${userId}-${timestamp}`;
+  
+    const hash = crypto.createHash('sha256');
 
+    hash.update(dataToHash);
+    const uniqueId = hash.digest('hex');  
+    return uniqueId;
+  }
   const sendMessage = () => {
     console.log("User", user);
-    if (message.trim() !== "") {
+    if (message.trim() !== "" && user?.id) {
       console.log("message is not empty");
       const msgObj: IMessage = {
         message: message,
-        senderId: user!.id,
+        senderId: user.id,
+        messageClientId:generateUniqueID(user?.id),
         room: chatRoom,
         recipientId: index, //We will discard the recipientId for main chat and will use it for PM
       };
