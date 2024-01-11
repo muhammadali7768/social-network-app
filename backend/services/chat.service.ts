@@ -85,9 +85,10 @@ export const startChatServices = async (
     });
 
     socket.on("privateChatMessage", async (msgObj) => {
-      const { senderId, room, message, recipientId } = msgObj;
+      const { senderId, room, message, recipientId, messageClientId } = msgObj;
       console.log("message", message);
       await chatProducer.sendPrivateMessage({
+        messageClientId,
         senderId: senderId,
         room,
         message,
