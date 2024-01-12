@@ -7,27 +7,29 @@ import { RedisClient } from "../config/redis";
 import { PgMessageService } from "../services/message/pg-message.service";
 import { validateToken } from "../middleware/auth.middleware";
 import { RedisMessageService } from "./message/redis-message.service";
-import {SocketMessageService} from './message/socket.message.service'
+import { SocketMessageService } from "./message/socket.message.service";
 import cookie from "cookie";
+import { validationResult } from "express-validator";
 
 import { RedisUserService } from "./user/redis-user.service";
+import { messageValidator } from "../utils/message-validator";
 export const startChatServices = async (
   http: Server,
   redisClient: RedisClient
 ) => {
-   await SocketIO.initialize(http, redisClient);
-   const io=SocketIO.getIO()
+  await SocketIO.initialize(http, redisClient);
+  const io = SocketIO.getIO();
   const chatConsumer = new ChatConsumer(io);
   const chatProducer = new ChatProducer();
   await chatProducer.start();
   await chatConsumer.startConsumer();
-  //creating observers and subscribing for messages 
+  //creating observers and subscribing for messages
   const redisMessageService = new RedisMessageService();
   chatConsumer.subscribe(redisMessageService);
   const pgMessageService = new PgMessageService();
   chatConsumer.subscribe(pgMessageService);
-  const socketMessageService= new SocketMessageService()
-  chatConsumer.subscribe(socketMessageService)
+  const socketMessageService = new SocketMessageService();
+  chatConsumer.subscribe(socketMessageService);
   const userService = new RedisUserService();
 
   await createTopics();
@@ -38,13 +40,11 @@ export const startChatServices = async (
 
   io.use(async (socket, next) => {
     const tokens = cookie.parse(socket.request.headers.cookie || "");
-    console.log("Socket", tokens.token);
-    // const token=socket.request.headers.cookie?.token
+
     if (!tokens?.token) {
       return next(new Error("invalid token"));
     }
     const decoded = await validateToken(tokens.token);
-    console.log("socket decoded user", decoded);
     if (decoded === null) {
       return next(new Error("invalid token"));
     }
@@ -69,12 +69,17 @@ export const startChatServices = async (
       const onlineUsers = await userService.getOnlineUsers("online_users");
       socket.emit("users", onlineUsers);
       const messages = await pgMessageService.getMainRoomMessages();
-      console.log("messages", messages.length);
+
       socket.emit("messageHistory", messages);
     });
 
     socket.on("mainChatMessage", async (msgObj) => {
       const { senderId, room, message, messageClientId } = msgObj;
+      const errors= messageValidator(msgObj)
+      if (errors.length > 0) {
+        // Handle validation errors, emit an event
+        socket.emit('validationError', { errors: errors });
+      } 
       console.log("message", message);
       await chatProducer.sendMainChatMessage({
         messageClientId,
@@ -103,3 +108,4 @@ export const startChatServices = async (
     });
   });
 };
+

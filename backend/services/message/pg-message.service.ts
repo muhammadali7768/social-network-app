@@ -13,6 +13,7 @@ export class PgMessageService implements IObserver {
         data: {
           message: messageData.message,
           senderId: messageData.senderId,
+          messageClientId: messageData.messageClientId
         },
       })
       .then((msg) => {
@@ -45,6 +46,7 @@ export class PgMessageService implements IObserver {
           message: messageData.message,
           senderId: messageData.senderId,
           recipientId: messageData.recipientId!,
+          messageClientId: messageData.messageClientId
         },
       })
       .then((msg) => {
