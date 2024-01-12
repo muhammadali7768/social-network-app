@@ -59,12 +59,13 @@ const register = async (req: Request, res: Response) => {
 
 // Login
 const login = async (req: Request, res: Response) => {
-  try {
+ 
     const user = await prisma.user.findUnique({
       where: {
         email: req.body.email,
       },
     });
+    console.log("Login route user User", user)
     if (!user) {
       throw new BadRequestError("Email or password does not match!");
     }
@@ -92,9 +93,7 @@ const login = async (req: Request, res: Response) => {
       username: user.username,
       email: user.email,
     });
-  } catch (error) {
-    throw new InternalServerError("Unable to process user login request");
-  }
+
 };
 
 const refreshToken = async (req: Request, res: Response) => {
@@ -103,7 +102,7 @@ const refreshToken = async (req: Request, res: Response) => {
   const oldToken = req.cookies.token;
 
   if (!refToken) throw new NotAuthorizedError();
-  try {
+ 
     const user = (await jwt.verify(
       refToken,
       process.env.REFRESH_TOKEN_SECRET!
@@ -133,10 +132,7 @@ const refreshToken = async (req: Request, res: Response) => {
     });
 
     res.status(201).send({});
-  } catch (err) {
-    console.log("Refresh token verification error");
-    throw new NotAuthorizedError();
-  }
+
 };
 
 // Get User
@@ -170,7 +166,7 @@ const logout = async (req: Request, res: Response) => {
     await redisClient.hDel(`user_tokens:${req.currentUser?.id}`, token);
     res.status(200).send({});
   } catch (error) {
-    throw new InternalServerError("Unable to logout user properly");
+    throw new NotAuthorizedError();
   }
 };
 

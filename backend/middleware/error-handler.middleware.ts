@@ -11,6 +11,7 @@ export const errorHandler = (
   }
 
   res.status(400).send({
+    //TODO: Update the error to a general type of error in Production
     errors: [{ message: "Something went wrong :"+ err.message }],
   });
 };

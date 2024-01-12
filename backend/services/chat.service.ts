@@ -9,7 +9,6 @@ import { validateToken } from "../middleware/auth.middleware";
 import { RedisMessageService } from "./message/redis-message.service";
 import { SocketMessageService } from "./message/socket.message.service";
 import cookie from "cookie";
-import { validationResult } from "express-validator";
 
 import { RedisUserService } from "./user/redis-user.service";
 import { messageValidator } from "../utils/message-validator";
@@ -23,6 +22,7 @@ export const startChatServices = async (
   const chatProducer = new ChatProducer();
   await chatProducer.start();
   await chatConsumer.startConsumer();
+
   //creating observers and subscribing for messages
   const redisMessageService = new RedisMessageService();
   chatConsumer.subscribe(redisMessageService);
@@ -74,31 +74,42 @@ export const startChatServices = async (
     });
 
     socket.on("mainChatMessage", async (msgObj) => {
-      const { senderId, room, message, messageClientId } = msgObj;
-      const errors= messageValidator(msgObj)
+     const {errors, sanitizedMessage} = messageValidator(msgObj);
+     const { senderId, room, message, messageClientId } = sanitizedMessage;
       if (errors.length > 0) {
         // Handle validation errors, emit an event
-        socket.emit('validationError', { errors: errors });
-      } 
-      console.log("message", message);
-      await chatProducer.sendMainChatMessage({
-        messageClientId,
-        senderId: senderId,
-        room,
-        message,
-      });
+        socket.emit("messageValidationError", [
+          { message: "Message format is not valid" },
+        ]);
+      } else {
+        console.log("message", message);
+        await chatProducer.sendMainChatMessage({
+          messageClientId,
+          senderId: senderId,
+          room,
+          message,
+        });
+      }
     });
 
     socket.on("privateChatMessage", async (msgObj) => {
-      const { senderId, room, message, recipientId, messageClientId } = msgObj;
+       const {errors, sanitizedMessage} = messageValidator(msgObj);
+       const { senderId, room, message, recipientId, messageClientId } = sanitizedMessage;
       console.log("message", message);
-      await chatProducer.sendPrivateMessage({
-        messageClientId,
-        senderId: senderId,
-        room,
-        message,
-        recipientId,
-      });
+      if (errors.length > 0) {
+        // Handle validation errors, emit an event
+        socket.emit("messageValidationError", [
+          { message: "Message format is not valid" },
+        ]);
+      } else {
+        await chatProducer.sendPrivateMessage({
+          messageClientId,
+          senderId: senderId,
+          room,
+          message,
+          recipientId,
+        });
+      }
     });
 
     socket.on("disconnect", async () => {
@@ -108,4 +119,3 @@ export const startChatServices = async (
     });
   });
 };
-
