@@ -35,6 +35,7 @@ export class ChatProducer {
           value: JSON.stringify({
             message: message.message,
             senderId: message.senderId,
+            messageClientId: message.messageClientId
           }),
           timestamp: Date.now().toString(),
           partition: 0,
@@ -52,6 +53,7 @@ export class ChatProducer {
             message: message.message,
             senderId: message.senderId,
             recipientId: message.recipientId,
+            messageClientId: message.messageClientId
           }),
           timestamp: Date.now().toString(),
           partition: 0,

@@ -12,7 +12,7 @@ const redisClient = RedisClient.getInstance().getRedisClient();
 // Register
 const register = async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
-  try {
+  
     const isExist = await prisma.user.findFirst({
       where: {
         OR: [
@@ -51,10 +51,8 @@ const register = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === "production",
     });
 
-    res.status(201).send({ ...user, accessToken: token, refreshToken });
-  } catch (error) {
-    throw new InternalServerError("Unable to process user register request");
-  }
+    res.status(201).send({id: user.id, email: user.email, username:user.username});
+ 
 };
 
 // Login

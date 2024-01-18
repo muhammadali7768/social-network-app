@@ -11,12 +11,11 @@ export class ChatConsumer implements ISubject {
   private observers: IObserver[] = [];
   private kafkaConsumer: Consumer;
   private subscribedTopic: string[];
-  private socket: Server;
+
 
   public constructor(io: Server) {
     this.kafkaConsumer = this.createKafkaConsumer();
     this.subscribedTopic = [];
-    this.socket = io;
   }
 
   subscribe(observer: IObserver): void {

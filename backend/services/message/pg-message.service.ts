@@ -1,8 +1,28 @@
+import { Server } from "socket.io";
 import prisma from "../../config/db";
 import { IMessage } from "../../interfaces/message.interface";
 import { IObserver } from "../../interfaces/observer.interface";
+import { SocketIO } from "../../config/socketio";
+import { IUser } from "../../interfaces/user.interface";
+
+interface DefaultEventsMap {
+  [event: string]: (...args: any[]) => void;
+}
+interface IAuthUser {
+  user: IUser;
+}
+
 
 export class PgMessageService implements IObserver {
+  protected socket: Server<
+  DefaultEventsMap,
+  DefaultEventsMap,
+  DefaultEventsMap,
+  IAuthUser
+>;
+  constructor() {
+    this.socket = SocketIO.getIO();
+  }
   update(message: IMessage, topic: string): void {
     if (topic === "chat") this.saveMessage(message);
     else this.savePrivateMessage(message);
@@ -13,7 +33,6 @@ export class PgMessageService implements IObserver {
         data: {
           message: messageData.message,
           senderId: messageData.senderId,
-          messageClientId: messageData.messageClientId
         },
       })
       .then((msg) => {
@@ -40,18 +59,24 @@ export class PgMessageService implements IObserver {
       });
   };
   savePrivateMessage = async (messageData: IMessage) => {
-    return await prisma.privateMessage
+    console.log("Saving Private Message in pg",messageData)
+    const msgId = await prisma.privateMessage
       .create({
         data: {
           message: messageData.message,
           senderId: messageData.senderId,
           recipientId: messageData.recipientId!,
-          messageClientId: messageData.messageClientId
         },
       })
       .then((msg) => {
         console.log("Private message saved to DB:", msg);
         return msg.id;
       });
+      //Send message confirmation event to the sender
+    this.socket.to(messageData.senderId.toString()).emit("messageReceivedByServer", {
+      messageId: msgId,
+      messageClientId: messageData.messageClientId,
+    });
+    return msgId;
   };
 }

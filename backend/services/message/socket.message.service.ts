@@ -12,6 +12,7 @@ interface IAuthUser {
   user: IUser;
 }
 
+
 export class SocketMessageService implements IObserver {
   protected socketio: Server<
     DefaultEventsMap,
