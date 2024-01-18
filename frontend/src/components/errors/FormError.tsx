@@ -1,11 +1,12 @@
-interface IError {
-    message:string,
-    field?: string
+import { IError } from "@/interfaces/error.interface";
+interface IProps{
+  errors: IError[]
+  
 }
-export const FormError = (errors: IError[]) => {
+export const FormError = ({errors}:IProps) => {
   return (
     <ul
-      className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+      className="list-disc p-4 px-6 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
       role="alert"
     >
         {

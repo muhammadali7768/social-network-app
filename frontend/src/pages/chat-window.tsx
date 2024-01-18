@@ -66,7 +66,7 @@ export default function ChatWindow() {
         // console.log("RefreshTokens", response);
         if (response.status === 201) {
           setTimeout(() => {
-            console.log("RECONNECTING>>>>>>")
+            console.log("RECONNECTING>>>>>>");
             socket.connect();
           }, 1000);
         } //else  if(response.status===401){
@@ -153,6 +153,15 @@ export default function ChatWindow() {
       socket.off("userDisconnected");
     };
   }, [socket, updateOrAddUser]);
+
+  useEffect(() => {
+    socket.on("messageReceivedByServer", (msgData: any) => {
+      console.log("Message Received by Server",msgData);
+    });
+    return () => {
+      socket.off("messageReceived");
+    };
+  },[socket]);
 
   //Here index is user id for Private messages and 0 for main chat
   const onChatChange = (index: number) => {

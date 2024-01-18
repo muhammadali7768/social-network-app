@@ -3,7 +3,7 @@ import cookie from "js-cookie";
 import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 import { request } from "@/config/axios";
-import { FormError } from "@/components/errors/FormError";
+
 import {
   IFortgotPasswordFormData,
   ILoginFormData,
@@ -11,56 +11,55 @@ import {
   IResetPasswordFormData,
 } from "@/interfaces/auth.interfaces";
 import useUserStore from "@/hooks/useUserStore";
+import { IError } from "@/interfaces/error.interface";
+
 
 export const useAuth = () => {
   const setUser = useUserStore((state) => state.setUser);
   const clearUserStore = useUserStore((state) => state.clearUserStore);
-  const [errors, setErrors]=useState(null)
+  const [errors, setErrors]=useState<IError[]>([])
   const { push } = useRouter();
   const [loading, setLoading] = useState(false);
 
   const login = async (postData: ILoginFormData) => {
+    setErrors([])
     try {
       setLoading(true);
       const { data } = await request.post("auth/login", postData);
       console.log("Errors",data)
       setLoading(false);
-      if (data && data.errors && data.errors.length > 0) {
-        setErrors(data.errors);
-      }
-      else {
-        console.log("ERRRRRRR")
-      }
-      if (data.email) {
+  
+      if (data.id) {
         setUser(data);
         push("/chat-window");
       }
     } catch (err: any) {
-      console.log(err.response)
+      console.log("Login Error",err.response?.data.errors)
+      if(err.response?.data.errors.length >0){
+        setErrors(err.response?.data.errors)
+      }
       setLoading(false);
-
-      toast.error(err.response?.data.message, {
-        position: toast.POSITION.TOP_RIGHT,
-      });
-      if (err.response?.data?.error === "EmailNotVerified")
-        push("/auth/verify-email");
+      // if (err.response?.data?.error === "EmailNotVerified")
+      //   push("/auth/verify-email");
     }
   };
 
   const register = async (postData: IRegisterFormData) => {
+    setErrors([])
     try {
       setLoading(true);
       const { data } = await request.post("auth/register", postData);
       setLoading(false);
       if (data.id) {
         setUser(data);
+        push("/chat-window");
       }
     } catch (err: any) {
       setLoading(false);
 
-      toast.error(err.response?.data.message, {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+      if(err.response?.data.errors.length >0){
+        setErrors(err.response?.data.errors)
+      }
     }
   };
 
@@ -81,7 +80,7 @@ export const useAuth = () => {
       });
     }
   };
-
+//TODO: implement email verification functionality
   const sendEmailVerification = async (email: string) => {
     try {
       setLoading(true);
@@ -101,6 +100,7 @@ export const useAuth = () => {
     }
   };
 
+  //TODO: Implement reset password
   const sendEmailForForgotPassword = async ({
     email,
   }: IFortgotPasswordFormData) => {
@@ -167,5 +167,6 @@ export const useAuth = () => {
     getUser,
     logout,
     loading,
+    errors
   };
 };

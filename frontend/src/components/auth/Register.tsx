@@ -2,8 +2,9 @@ import React, { useState, ChangeEvent, FormEvent } from "react";
 import Button from "../Button";
 import {IRegisterFormData} from '@/interfaces/auth.interfaces'
 import { useAuth } from '@/hooks/useAuth';
+import { FormError } from "../errors/FormError";
 const RegisterForm: React.FC = () => {
-  const {register}=useAuth();
+  const {register, errors}=useAuth();
   const [formData, setFormData] = useState<IRegisterFormData>({
     username: "",
     email: "",
@@ -49,6 +50,7 @@ const RegisterForm: React.FC = () => {
         placeholder="Password"
         className="w-full bg-white rounded-lg border-gray-300 mb-6 p-2"
       />
+      {errors.length > 0 && <FormError errors={errors} />}
       <Button type="submit" className="w-full" variant="primary">
         Register
       </Button>

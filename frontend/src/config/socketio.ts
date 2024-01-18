@@ -3,6 +3,7 @@ import { IMessage } from "../interfaces/message.interface";
 import { IListUser } from "@/interfaces/auth.interfaces";
 interface ServerToClientEvents {
   messageHistory: (messages: IMessage[]) => void;
+  messageReceivedByServer: (messageData:any)=>void
   message: (message: IMessage) => void;
   userConnected: (user: IListUser) => void;
   users: (users:IListUser[])=>void
