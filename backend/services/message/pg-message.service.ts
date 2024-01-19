@@ -12,14 +12,13 @@ interface IAuthUser {
   user: IUser;
 }
 
-
 export class PgMessageService implements IObserver {
   protected socket: Server<
-  DefaultEventsMap,
-  DefaultEventsMap,
-  DefaultEventsMap,
-  IAuthUser
->;
+    DefaultEventsMap,
+    DefaultEventsMap,
+    DefaultEventsMap,
+    IAuthUser
+  >;
   constructor() {
     this.socket = SocketIO.getIO();
   }
@@ -59,7 +58,7 @@ export class PgMessageService implements IObserver {
       });
   };
   savePrivateMessage = async (messageData: IMessage) => {
-    console.log("Saving Private Message in pg",messageData)
+    console.log("Saving Private Message in pg", messageData);
     const msgId = await prisma.privateMessage
       .create({
         data: {
@@ -72,11 +71,13 @@ export class PgMessageService implements IObserver {
         console.log("Private message saved to DB:", msg);
         return msg.id;
       });
-      //Send message confirmation event to the sender
-    this.socket.to(messageData.senderId.toString()).emit("messageReceivedByServer", {
-      messageId: msgId,
-      messageClientId: messageData.messageClientId,
-    });
+    //Send message confirmation event to the sender
+    this.socket
+      .to(messageData.senderId.toString())
+      .emit("messageReceivedByServer", {
+        messageId: msgId,
+        messageClientId: messageData.messageClientId,
+      });
     return msgId;
   };
 }
