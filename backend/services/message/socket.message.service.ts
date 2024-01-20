@@ -37,4 +37,13 @@ export class SocketMessageService implements IObserver {
     if (topic === "chat") this.emitMainChatMessage(message);
     else this.emitPrivateChatMessage(message);
   }
+
+  emitPrivateMessageUpdate(senderId:number, msgId:number, msgClientId:string){
+    this.socketio
+    .to(senderId.toString())
+    .emit("messageReceivedByServer", {
+      messageId: msgId,
+      messageClientId: msgClientId,
+    });
+  }
 }

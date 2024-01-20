@@ -2,32 +2,24 @@ import { Server } from "socket.io";
 import prisma from "../../config/db";
 import { IMessage } from "../../interfaces/message.interface";
 import { IObserver } from "../../interfaces/observer.interface";
-import { SocketIO } from "../../config/socketio";
-import { IUser } from "../../interfaces/user.interface";
+import { RedisMessageService } from "./redis-message.service";
+import { SocketMessageService } from "./socket.message.service";
 
-interface DefaultEventsMap {
-  [event: string]: (...args: any[]) => void;
-}
-interface IAuthUser {
-  user: IUser;
-}
+
 
 export class PgMessageService implements IObserver {
-  protected socket: Server<
-    DefaultEventsMap,
-    DefaultEventsMap,
-    DefaultEventsMap,
-    IAuthUser
-  >;
+  protected redisMessageService: RedisMessageService;
+  protected socketMessageService: SocketMessageService;
   constructor() {
-    this.socket = SocketIO.getIO();
+    this.redisMessageService = new RedisMessageService();
+    this.socketMessageService = new SocketMessageService();
   }
   update(message: IMessage, topic: string): void {
-    if (topic === "chat") this.saveMessage(message);
+    if (topic === "chat") this.saveMainChatMessage(message);
     else this.savePrivateMessage(message);
   }
-  saveMessage = async (messageData: IMessage) => {
-    return await prisma.mainRoomMessage
+  saveMainChatMessage = async (messageData: IMessage) => {
+    let msgId = await prisma.mainRoomMessage
       .create({
         data: {
           message: messageData.message,
@@ -38,6 +30,11 @@ export class PgMessageService implements IObserver {
         console.log("Message Saved to DB:", msg);
         return msg.id;
       });
+    this.redisMessageService.updateMainChatMessage(
+      msgId,
+      messageData.messageClientId,
+      messageData.senderId
+    );
   };
 
   getMainRoomMessages = async () => {
@@ -71,13 +68,11 @@ export class PgMessageService implements IObserver {
         console.log("Private message saved to DB:", msg);
         return msg.id;
       });
-    //Send message confirmation event to the sender
-    this.socket
-      .to(messageData.senderId.toString())
-      .emit("messageReceivedByServer", {
-        messageId: msgId,
-        messageClientId: messageData.messageClientId,
-      });
+    this.socketMessageService.emitPrivateMessageUpdate(
+      messageData.senderId,
+      msgId,
+      messageData.messageClientId
+    );
     return msgId;
   };
 }

@@ -29,7 +29,7 @@ export class RedisMessageService implements IObserver {
   }
   async updateMainChatMessage(
     messageId: number,
-    messageClientId: number,
+    messageClientId: string,
     senderId: number
   ) {
     const messages = await this.redisClient.lRange(
