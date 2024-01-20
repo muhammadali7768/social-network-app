@@ -5,8 +5,6 @@ import { IObserver } from "../../interfaces/observer.interface";
 import { RedisMessageService } from "./redis-message.service";
 import { SocketMessageService } from "./socket.message.service";
 
-
-
 export class PgMessageService implements IObserver {
   protected redisMessageService: RedisMessageService;
   protected socketMessageService: SocketMessageService;
@@ -19,22 +17,59 @@ export class PgMessageService implements IObserver {
     else this.savePrivateMessage(message);
   }
   saveMainChatMessage = async (messageData: IMessage) => {
+    const { senderId, message, messageClientId } = messageData;
     let msgId = await prisma.mainRoomMessage
       .create({
         data: {
-          message: messageData.message,
-          senderId: messageData.senderId,
+          message: message,
+          senderId: senderId,
         },
       })
       .then((msg) => {
         console.log("Message Saved to DB:", msg);
         return msg.id;
       });
+
+    this.socketMessageService.emitMainChatMessageUpdate(
+      senderId,
+      msgId,
+      messageClientId
+    );
     this.redisMessageService.updateMainChatMessage(
       msgId,
-      messageData.messageClientId,
-      messageData.senderId
+      messageClientId,
+      senderId
     );
+  };
+
+  savePrivateMessage = async (messageData: IMessage) => {
+    const { message, senderId, recipientId, messageClientId } = messageData;
+    if (!recipientId) return;
+    const msgId = await prisma.privateMessage
+      .create({
+        data: {
+          message: message,
+          senderId: senderId,
+          recipientId: recipientId,
+        },
+      })
+      .then((msg) => {
+        console.log("Private message saved to DB:", msg);
+        return msg.id;
+      });
+    this.socketMessageService.emitPrivateChatMessageUpdate(
+      senderId,
+      recipientId,
+      msgId,
+      messageClientId
+    );
+    this.redisMessageService.updatePrivateChatMessage(
+      msgId,
+      messageClientId,
+      senderId,
+      recipientId
+    );
+    return msgId;
   };
 
   getMainRoomMessages = async () => {
@@ -53,26 +88,5 @@ export class PgMessageService implements IObserver {
       .then((messages) => {
         return messages;
       });
-  };
-  savePrivateMessage = async (messageData: IMessage) => {
-    console.log("Saving Private Message in pg", messageData);
-    const msgId = await prisma.privateMessage
-      .create({
-        data: {
-          message: messageData.message,
-          senderId: messageData.senderId,
-          recipientId: messageData.recipientId!,
-        },
-      })
-      .then((msg) => {
-        console.log("Private message saved to DB:", msg);
-        return msg.id;
-      });
-    this.socketMessageService.emitPrivateMessageUpdate(
-      messageData.senderId,
-      msgId,
-      messageData.messageClientId
-    );
-    return msgId;
   };
 }

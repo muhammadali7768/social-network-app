@@ -38,12 +38,23 @@ export class SocketMessageService implements IObserver {
     else this.emitPrivateChatMessage(message);
   }
 
-  emitPrivateMessageUpdate(senderId:number, msgId:number, msgClientId:string){
+  emitPrivateChatMessageUpdate(senderId:number, recipientId:number, msgId:number, msgClientId:string){
     this.socketio
     .to(senderId.toString())
-    .emit("messageReceivedByServer", {
+    .emit("pmMessageReceivedByServer", {
+      messageId: msgId,
+      recipientId,
+      messageClientId: msgClientId,
+    });
+  }
+ //TODO: Currently we are emitting to the sender, we will broadcast it to all users.
+  emitMainChatMessageUpdate(senderId:number, msgId:number, msgClientId:string){
+    this.socketio
+    .to(senderId.toString())
+    .emit("mMessageReceivedByServer", {
       messageId: msgId,
       messageClientId: msgClientId,
     });
   }
+
 }

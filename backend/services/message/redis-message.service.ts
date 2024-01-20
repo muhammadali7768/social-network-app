@@ -23,10 +23,12 @@ export class RedisMessageService implements IObserver {
       JSON.stringify(message)
     );
   }
+
   update(message: IMessage, topic: string): void {
     if (topic === "chat") this.saveMainChatMessage(message);
     else this.savePrivateChatMessage(message);
   }
+
   async updateMainChatMessage(
     messageId: number,
     messageClientId: string,
@@ -49,6 +51,39 @@ export class RedisMessageService implements IObserver {
 
       this.redisClient.lSet(
         `main_chat_messages:${senderId}`,
+        indexToUpdate,
+        JSON.stringify({ ...updatedMessage, id: messageId })
+      );
+    }
+  }
+
+  async updatePrivateChatMessage(
+    messageId: number,
+    messageClientId: string,
+    senderId: number,
+    recipientId:number
+  ) {
+    const roomName = generatePrivateChatRoomName(
+      senderId,
+      recipientId
+    );
+    const messages = await this.redisClient.lRange(
+      roomName,
+      0,
+      -1
+    );
+
+    // Find the index of the message to update
+    const indexToUpdate = messages.findIndex(
+      (msg) => JSON.parse(msg).messageClientId === messageClientId
+    );
+
+    // Update the message at the identified index
+    if (indexToUpdate !== -1) {
+      const updatedMessage = JSON.parse(messages[indexToUpdate]);
+
+      this.redisClient.lSet(
+        roomName,
         indexToUpdate,
         JSON.stringify({ ...updatedMessage, id: messageId })
       );
