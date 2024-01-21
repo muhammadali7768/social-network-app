@@ -10,26 +10,34 @@ const ChatInput = ({ index }: { index: number }) => {
   const socket = initSocket();
   const user = useUserStore((state) => state.user);
   const generateUniqueID=(userId:number)=> {
-    const timestamp=Date.now()
-    const dataToHash = `${userId}-${timestamp}`;
+    const timestamp = Math.floor(Date.now() / 1000); 
+    const shortNumericValue = Math.floor(Math.random() * 10000); 
+  
+    const dataToHash = `${userId}-${timestamp}-${shortNumericValue}`;
   
     const hash = crypto.createHash('sha256');
-
+  
     hash.update(dataToHash);
-    const uniqueId = hash.digest('hex');  
-    return uniqueId;
+    const hexHash = hash.digest('hex');  
+    
+    const decimalValue = parseInt(hexHash.substring(0, 8), 16);
+  
+    return decimalValue;
   }
   const sendMessage = () => {
     console.log("User", user);
     if (message.trim() !== "" && user?.id) {
       console.log("message is not empty");
+      const uniqueId=generateUniqueID(user?.id);
       const msgObj: IMessage = {
+        id: uniqueId, // This id is for client side rendering 
         message: message,
         senderId: user.id,
-        messageClientId:generateUniqueID(user?.id),
+        messageClientId: uniqueId,
         room: chatRoom,
         recipientId: index, //We will discard the recipientId for main chat and will use it for PM
       };
+      console.log("Message sending",msgObj)
       if (index === 0) socket.emit("mainChatMessage", msgObj);
       else socket.emit("privateChatMessage", msgObj);
       setMessage("");
