@@ -27,15 +27,17 @@ export class ChatProducer {
     await this.producer.disconnect();
   }
 
-  async sendMainChatMessage(message: IMessage) {
+  async sendMainChatMessage(messageData: IMessage) {
+    const { id, message, senderId, messageClientId, room } = messageData;
     await this.producer.send({
-      topic: message.room,
+      topic: room,
       messages: [
         {
           value: JSON.stringify({
-            message: message.message,
-            senderId: message.senderId,
-            messageClientId: message.messageClientId
+            id,
+            message,
+            senderId,
+            messageClientId,
           }),
           timestamp: Date.now().toString(),
           partition: 0,
@@ -44,16 +46,19 @@ export class ChatProducer {
     });
   }
 
-  async sendPrivateMessage(message: IMessage) {
+  async sendPrivateMessage(messageData: IMessage) {
+    const { id, message, senderId, recipientId, messageClientId, room } =
+      messageData;
     await this.producer.send({
-      topic: message.room,
+      topic: room,
       messages: [
         {
           value: JSON.stringify({
-            message: message.message,
-            senderId: message.senderId,
-            recipientId: message.recipientId,
-            messageClientId: message.messageClientId
+            id,
+            message,
+            senderId,
+            recipientId,
+            messageClientId,
           }),
           timestamp: Date.now().toString(),
           partition: 0,

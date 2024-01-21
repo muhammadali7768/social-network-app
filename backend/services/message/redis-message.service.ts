@@ -31,7 +31,7 @@ export class RedisMessageService implements IObserver {
 
   async updateMainChatMessage(
     messageId: number,
-    messageClientId: string,
+    messageClientId: number,
     senderId: number
   ) {
     const messages = await this.redisClient.lRange(
@@ -59,7 +59,7 @@ export class RedisMessageService implements IObserver {
 
   async updatePrivateChatMessage(
     messageId: number,
-    messageClientId: string,
+    messageClientId: number,
     senderId: number,
     recipientId:number
   ) {

@@ -25,6 +25,7 @@ export class ChatConsumer implements ISubject {
     this.observers = this.observers.filter((obs) => obs !== observer);
   }
   notifySubscribers(message: IMessage, topic: string): void {
+    console.log("Message in notify",message)
     this.observers.forEach((observer) => observer.update(message, topic));
   }
   public async subscribeToTopic(topicName: string) {
@@ -46,7 +47,8 @@ export class ChatConsumer implements ISubject {
         if (message.value) {
           const stringValue = message.value.toString("utf8") ?? "";
           const messageData: IMessage = JSON.parse(stringValue);
-          this.notifySubscribers({ ...messageData, id: message.offset }, topic);
+          console.log("Consumer Message",messageData)
+          this.notifySubscribers(messageData , topic);
         }
       },
     });

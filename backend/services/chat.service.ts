@@ -75,17 +75,18 @@ export const startChatServices = async (
 
     socket.on("mainChatMessage", async (msgObj) => {
      const {errors, sanitizedMessage} = messageValidator(msgObj);
-     const { senderId, room, message, messageClientId } = sanitizedMessage;
+     const { senderId, room, message, messageClientId,id } = sanitizedMessage;
       if (errors.length > 0) {
         // Handle validation errors, emit an event
         socket.emit("messageValidationError", [
           { message: "Message format is not valid" },
         ]);
       } else {
-        console.log("message", message);
+        console.log("Sanitiized Message",sanitizedMessage)
         await chatProducer.sendMainChatMessage({
+          id,
           messageClientId,
-          senderId: senderId,
+          senderId,
           room,
           message,
         });
@@ -94,7 +95,7 @@ export const startChatServices = async (
 
     socket.on("privateChatMessage", async (msgObj) => {
        const {errors, sanitizedMessage} = messageValidator(msgObj);
-       const { senderId, room, message, recipientId, messageClientId } = sanitizedMessage;
+       const { senderId, room, message, recipientId, messageClientId,id } = sanitizedMessage;
       console.log("message", message);
       if (errors.length > 0) {
         // Handle validation errors, emit an event
@@ -103,6 +104,7 @@ export const startChatServices = async (
         ]);
       } else {
         await chatProducer.sendPrivateMessage({
+          id,
           messageClientId,
           senderId: senderId,
           room,
