@@ -22,7 +22,7 @@ const MessageList = ({messages}:IProps) => {
                 : 'bg-gray-200 text-gray-800 rounded-br-lg rounded-bl-lg rounded-tr-lg'
             } py-2 px-4 max-w-sm break-words`}
           >
-            {message.message}
+           {message.id} {message.message}
           </div>
         </div>
       ))}

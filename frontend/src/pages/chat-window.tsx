@@ -3,40 +3,26 @@ import ListItem from "@/components/chat/ContactItem";
 import ContactList from "@/components/chat/ContactList";
 import MessageList from "@/components/chat/MessageList";
 import ChatWindowHeader from "@/components/layout/ChatWindowHeader";
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import useUserStore from "@/hooks/useUserStore";
 import useChatStore from "@/hooks/useChatStore";
 import { IListUser } from "@/interfaces/auth.interfaces";
-import { initSocket } from "@/config/socketio";
-import { IMessage } from "@/interfaces/message.interface";
+
 import MainChatItem from "@/components/chat/MainChatItem";
-import NavigateService from "@/services/navigate";
-import { getNewTokenByRefreshToken } from "@/config/axios";
+
 import { useChatEffects } from "@/hooks/useChatEffects";
 export default function ChatWindow() {
-  useChatEffects()
+  useChatEffects();
   const usersList = useUserStore((state) => state.usersList);
-  const setUsersList = useUserStore((state) => state.setUsersList);
-  const updateUserMessages = useUserStore((state) => state.updateUserMessages);
-  const {
-    mainChatMessages,
-    activeChatMessages,
-    setActiveChatMessages,
-    setMainChatMessages,
-    updateActiveChatMessages,
-    updateMainChatMessages,
-    updateMainMessage,
-    updatePrivateMessage
-  } = useChatStore();
+
+  const { mainChatMessages, activeChatMessages, setActiveChatMessages, setActiveChatIndex, activeChatIndex } =
+    useChatStore();
   const user = useUserStore((state) => state.user);
-  const [activeIndex, setActiveIndex] = useState(0);
+  // const [activeIndex, setActiveIndex] = useState(0);
 
-  const socket = initSocket();
-
- 
   //Here index is user id for Private messages and 0 for main chat
   const onChatChange = (index: number) => {
-    setActiveIndex(index);
+    setActiveChatIndex(index);
     if (index === 0) {
       setActiveChatMessages(mainChatMessages);
     } else if (index === user?.id) {
@@ -61,7 +47,7 @@ export default function ChatWindow() {
             <ContactList>
               <MainChatItem
                 name="Main Chat"
-                isActive={activeIndex === 0}
+                isActive={activeChatIndex === 0}
                 onShow={() => onChatChange(0)}
               />
               {usersList &&
@@ -70,7 +56,7 @@ export default function ChatWindow() {
                     <ListItem
                       key={user.username}
                       user={user}
-                      isActive={activeIndex === user.id}
+                      isActive={activeChatIndex === user.id}
                       onShow={() => onChatChange(user.id)}
                     />
                   );
@@ -81,10 +67,10 @@ export default function ChatWindow() {
           <div className="basis-3/4 border">
             <div className="flex flex-col w-full h-screen bg-white">
               <div className="h-5/6">
-                <MessageList key={activeIndex} messages={activeChatMessages} />
+                <MessageList key={activeChatIndex} messages={activeChatMessages} />
               </div>
               <div className="h-1/6 bg-slate-100 py-6">
-                <ChatInput index={activeIndex} key={activeIndex} />
+                <ChatInput index={activeChatIndex} key={activeChatIndex} />
               </div>
             </div>
           </div>
