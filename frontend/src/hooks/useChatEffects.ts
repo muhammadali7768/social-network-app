@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import useUserStore from "@/hooks/useUserStore";
 import useChatStore from "@/hooks/useChatStore";
 import { IListUser } from "@/interfaces/auth.interfaces";
@@ -21,8 +21,7 @@ export const useChatEffects = () => {
     updateMainChatMessages,
     updateMainMessage,
     mainChatMessages,
-    activeChatIndex,
-    setActiveChatIndex,
+    activeChatIndex
   } = useChatStore();
   const user = useUserStore((state) => state.user);
   const updateOrAddUser = useCallback(

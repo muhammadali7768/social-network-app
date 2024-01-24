@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { produce } from "immer";
 import { IMessage } from "@/interfaces/message.interface";
 
 interface ChatStore {
@@ -11,11 +10,6 @@ interface ChatStore {
   updateActiveChatMessages: (newMessage: IMessage) => void;
   updateMainMessage: (id: number, messageClientId: number) => void;
   setActiveChatIndex: (index: number) => void;
-  // updatePrivateMessage: (
-  // id: number,
-  // messageClientId: number,
-  // receipientId: number
-  // ) => void;
   setActiveChatMessages: (newMessages: IMessage[]) => void;
   clearChatStore: () => void;
 }
@@ -24,7 +18,6 @@ const useChatStore = create<ChatStore>()((set, get) => ({
   mainChatMessages: [],
   activeChatMessages: [],
   activeChatIndex: 0,
-  // privateMessages: [],
   setMainChatMessages: (newList: IMessage[]) => {
     set({ mainChatMessages: newList });
   },
@@ -54,32 +47,6 @@ const useChatStore = create<ChatStore>()((set, get) => ({
   setActiveChatIndex: (index: number) => {
     set({ activeChatIndex: index });
   },
-  // updatePrivateMessage: (
-  //   id: number,
-  //   messageClientId: number,
-  //   receipientId: number
-  // ) => {
-  // set(
-  //   produce((receipientMessages) => {
-  //     const indexToBeUpdated = get().privateMessages.findIndex(
-  //       (msg) => msg.receipientId === receipientId
-  //     );
-  //     if (indexToBeUpdated > -1) {
-  //       let newMessages = get().privateMessages[
-  //         indexToBeUpdated
-  //       ].messages.map((msg) => {
-  //         if (msg.messageClientId === messageClientId) {
-  //           return { ...msg, id };
-  //         }
-  //         return msg;
-  //       });
-
-  //       receipientMessages.privateMessage[indexToBeUpdated].messages =
-  //         newMessages;
-  //       }
-  //     })
-  //   );
-  // },
   clearChatStore: () => {
     set({ mainChatMessages: [], activeChatMessages: [] });
   },

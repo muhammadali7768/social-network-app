@@ -3,7 +3,6 @@ import ListItem from "@/components/chat/ContactItem";
 import ContactList from "@/components/chat/ContactList";
 import MessageList from "@/components/chat/MessageList";
 import ChatWindowHeader from "@/components/layout/ChatWindowHeader";
-import { useState } from "react";
 import useUserStore from "@/hooks/useUserStore";
 import useChatStore from "@/hooks/useChatStore";
 import { IListUser } from "@/interfaces/auth.interfaces";
@@ -18,7 +17,6 @@ export default function ChatWindow() {
   const { mainChatMessages, activeChatMessages, setActiveChatMessages, setActiveChatIndex, activeChatIndex } =
     useChatStore();
   const user = useUserStore((state) => state.user);
-  // const [activeIndex, setActiveIndex] = useState(0);
 
   //Here index is user id for Private messages and 0 for main chat
   const onChatChange = (index: number) => {
