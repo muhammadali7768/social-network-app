@@ -1,16 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { IMessage } from '@/interfaces/message.interface';
 import useUserStore from "@/hooks/useUserStore";
 interface IProps {
   messages: IMessage[]
 }
 const MessageList = ({messages}:IProps) => {
-
   const user= useUserStore(state=>state.user)
   const isMe=(senderId:number)=>{
     return senderId===user?.id
   }
- console.log("Messages",messages)
+
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages]);
   return (
     <div className="flex flex-col h-full p-10  overflow-y-auto">
       {messages.map((message:IMessage) => (
@@ -34,6 +42,7 @@ const MessageList = ({messages}:IProps) => {
         </div>
         </div>
       ))}
+      <div ref={messagesEndRef} />
     </div>
   );
 };
