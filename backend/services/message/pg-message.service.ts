@@ -73,9 +73,11 @@ export class PgMessageService implements IObserver {
   };
 
   getMainRoomMessages = async () => {
-    return await prisma.mainRoomMessage.findMany({}).then((messages) => {
-      return messages;
-    });
+    return await prisma.mainRoomMessage
+      .findMany({ include: { sender: { select: {id: true, username: true}} } })
+      .then((messages) => {
+        return messages;
+      });
   };
   getPrivateMessages = (senderId: number, recipientId: number) => {
     prisma.privateMessage
