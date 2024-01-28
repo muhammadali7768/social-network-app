@@ -19,10 +19,10 @@ export const useChatEffects = () => {
     setMainChatMessages,
     updateActiveChatMessages,
     updateMainChatMessages,
-    updateMainMessage,
-    mainChatMessages,
     activeChatIndex
   } = useChatStore();
+  const mainChatMessages=useChatStore((state)=>state.mainChatMessages);
+  const updateMainMessage=useChatStore((state)=>state.updateMainMessage);
   const user = useUserStore((state) => state.user);
   const updateOrAddUser = useCallback(
     (userId: number, status: string, user?: IListUser) => {
@@ -143,17 +143,16 @@ export const useChatEffects = () => {
       updateMessage(messageId, messageClientId, recipientId);
       if (activeChatIndex > 0) {
         const userMessages = usersList.find((u) => u.id === activeChatIndex);
-        console.log("Active chat user", userMessages)
         setActiveChatMessages(userMessages?.messages || []);
       }
     });
-    socket.on("mMessageReceivedByServer", async(msgData: any) => {
-      await updateMainMessage(msgData.messageId, msgData.messageClientId);
-      if (activeChatIndex === 0) {
-        console.log("Main Chat message", mainChatMessages)
-        setActiveChatMessages(mainChatMessages);
-      }
+    socket.on("mMessageReceivedByServer", (msgData: any) => {
+       updateMainMessage(msgData.messageId, msgData.messageClientId)
     });
+
+    if (activeChatIndex === 0) {
+      setActiveChatMessages(mainChatMessages);
+    }
     return () => {
       socket.off("pmMessageReceivedByServer");
       socket.off("mMessageReceivedByServer");
@@ -167,4 +166,6 @@ export const useChatEffects = () => {
     setActiveChatMessages,
     usersList,
   ]);
+
+  
 };

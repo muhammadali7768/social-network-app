@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import {devtools} from 'zustand/middleware'
 import { IMessage } from "@/interfaces/message.interface";
 
 interface ChatStore {
@@ -14,7 +15,7 @@ interface ChatStore {
   clearChatStore: () => void;
 }
 
-const useChatStore = create<ChatStore>()((set, get) => ({
+const useChatStore = create<ChatStore>()(devtools((set, get) => ({
   mainChatMessages: [],
   activeChatMessages: [],
   activeChatIndex: 0,
@@ -28,21 +29,18 @@ const useChatStore = create<ChatStore>()((set, get) => ({
     set({ activeChatMessages: [...get().activeChatMessages, newMessage] });
   },
   setActiveChatMessages: (newList: IMessage[]) => {
-    console.log("Setting Active chat Messages")
     set({ activeChatMessages: newList });
   },
-  updateMainMessage: async(id: number, messageClientId: number) => {   
-    const updatedMessages=get().mainChatMessages.map((msg) => {
-      if (msg.messageClientId === messageClientId) {
-        return { ...msg, id };
-      } else return msg;
-    });
-
-    
-    set({
-      mainChatMessages: updatedMessages,
-    });
-    console.log("Message ID",get().mainChatMessages)
+  updateMainMessage: (id: number, messageClientId: number) => {
+    const messageIndex = get().mainChatMessages.findIndex(
+      (msg) => msg.messageClientId === messageClientId
+    );
+    if (messageIndex != -1) {
+      const updatedMessage = { ...get().mainChatMessages[messageIndex], id };
+        const updatedMessages = [...get().mainChatMessages];
+        updatedMessages[messageIndex] = updatedMessage;
+     set({mainChatMessages: updatedMessages})
+    }
   },
   setActiveChatIndex: (index: number) => {
     set({ activeChatIndex: index });
@@ -50,6 +48,6 @@ const useChatStore = create<ChatStore>()((set, get) => ({
   clearChatStore: () => {
     set({ mainChatMessages: [], activeChatMessages: [] });
   },
-}));
+})));
 
 export default useChatStore;

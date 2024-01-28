@@ -10,12 +10,14 @@ import { IListUser } from "@/interfaces/auth.interfaces";
 import MainChatItem from "@/components/chat/MainChatItem";
 
 import { useChatEffects } from "@/hooks/useChatEffects";
+
 export default function ChatWindow() {
   useChatEffects();
   const usersList = useUserStore((state) => state.usersList);
 
-  const { mainChatMessages, activeChatMessages, setActiveChatMessages, setActiveChatIndex, activeChatIndex } =
+  const { activeChatMessages, setActiveChatMessages, setActiveChatIndex, activeChatIndex } =
     useChatStore();
+    const mainChatMessages=useChatStore((state)=>state.mainChatMessages);
   const user = useUserStore((state) => state.user);
 
   //Here index is user id for Private messages and 0 for main chat
@@ -31,6 +33,8 @@ export default function ChatWindow() {
       setActiveChatMessages(activeChatUser?.messages || []);
     }
   };
+ 
+
 
   return (
     <main className={`flex min-h-screen flex-col items-center`}>

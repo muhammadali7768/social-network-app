@@ -26,7 +26,6 @@ export const useAuth = () => {
     try {
       setLoading(true);
       const { data } = await request.post("auth/login", postData);
-      console.log("Errors",data)
       setLoading(false);
   
       if (data.id) {
