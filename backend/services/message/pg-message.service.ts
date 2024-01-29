@@ -1,4 +1,3 @@
-import { Server } from "socket.io";
 import prisma from "../../config/db";
 import { IMessage } from "../../interfaces/message.interface";
 import { IObserver } from "../../interfaces/observer.interface";
